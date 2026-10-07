@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>하네스 빌더</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--ink:#1F2A44;--text:#1f1f1f;--muted:#5c6270;--line:#d6d9df;--soft:#f1f2f5;--bg:#fafaf8;--card:#fff;--note:#fff7d1;--note-line:#c9a400}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;word-break:keep-all;overflow-wrap:anywhere}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+button,input,textarea{font:inherit;color:inherit}
+button{min-height:44px;padding:8px 16px;border:1px solid var(--line);background:var(--card);border-radius:4px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--ink)}
+button:disabled{opacity:.45;cursor:default}
+.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+input:not([type=radio]):not([type=checkbox]),textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:#fff}
+::placeholder{color:#9aa0aa}
+h3{font-size:18px;margin:28px 0 10px;color:var(--ink)}
+.muted{color:var(--muted)} .small{font-size:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* 상단 */
+.top{background:var(--card);border-bottom:1px solid var(--line);padding:16px 0 12px}
+.brand{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
+.brand h1{margin:0;font-size:24px;color:var(--ink)} .brand p{margin:0;color:var(--muted)}
+#steps{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px 0;align-items:center}
+#steps li{display:flex;align-items:center}
+#steps li+li::before{content:"→";color:var(--muted);padding:0 6px}
+#steps button[aria-current]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+#meter{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:12px;font-size:15px}
+#meter .gauge{width:120px;height:8px;border:1px solid var(--ink);display:inline-block}
+#meter .gauge i{display:block;height:100%;background:var(--ink)}
+#meter button{min-height:36px;padding:4px 10px;font-size:15px}
+
+/* 본문 */
+.layout{display:grid;gap:20px;padding-top:20px;padding-bottom:24px}
+@media(min-width:1000px){
+  .layout{grid-template-columns:minmax(0,1fr) 400px}
+  .layout.full{grid-template-columns:minmax(0,1fr)}
+  .preview{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 110px);overflow:auto}
+}
+.card,.preview{background:var(--card);border:1px solid var(--line);padding:24px;min-width:0}
+.preview{padding:16px 20px}
+.preview h2{font-size:18px;margin:0;color:var(--ink)}
+.eyebrow{margin:0;font-size:14px;color:var(--muted);letter-spacing:.05em}
+.card h2{font-size:24px;margin:0 0 12px;color:var(--ink)}
+.easy{border-left:3px solid var(--ink);background:var(--soft);padding:10px 14px;margin:0 0 20px}
+.easy p{margin:2px 0}
+.privacy{border:1px solid var(--ink);padding:10px 14px;font-weight:600}
+.note{background:var(--note);border:1px solid var(--note-line);padding:6px 10px;margin:6px 0 0;font-size:15px}
+pre{white-space:pre-wrap;font:16px/1.7 inherit;font-family:inherit;margin:8px 0 0}
+.out{border:1px solid var(--line);padding:16px;background:#fff}
+
+fieldset{border:0;padding:0;margin:0 0 20px}
+legend{font-weight:700;margin-bottom:8px;padding:0}
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;width:1px;height:1px}
+.opt span{display:flex;align-items:center;min-height:52px;padding:10px 14px;border:1px solid var(--line);background:#fff;cursor:pointer;height:100%}
+.opt input:checked+span{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+.opt input:checked+span::before{content:"✓\00a0"}
+.opt input:focus-visible+span{outline:3px solid var(--ink);outline-offset:2px}
+.inline .opt{display:inline-block;margin-right:8px}
+
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.field label{display:block;font-weight:600;margin-bottom:4px}
+.star{font-size:13px;border:1px solid var(--ink);color:var(--ink);padding:0 6px;margin-left:6px;border-radius:2px;white-space:nowrap}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{text-align:left}
+.rules{list-style:none;padding:0;margin:0;border-top:1px solid var(--line)}
+.rules li{display:flex;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.rules .num{width:24px;flex:none;color:var(--muted);text-align:right}
+.rules input{flex:1;min-width:0}
+.rules button{flex:none;padding:8px 12px}
+@media(max-width:640px){.rules li{flex-wrap:wrap}.rules input{flex-basis:calc(100% - 30px)}.rules button{margin-left:auto}.rules button+button{margin-left:0}}
+.add{display:flex;gap:8px;margin-top:12px}
+.add button{flex:none}
+.check{display:flex;gap:10px;align-items:center;min-height:44px;cursor:pointer;flex-wrap:wrap}
+.check input{width:22px;height:22px;accent-color:var(--ink);flex:none;margin:0}
+.badge{font-size:13px;border:1px dashed var(--ink);color:var(--ink);padding:0 6px;white-space:nowrap}
+.auto .check{border-bottom:1px solid var(--line);padding:8px 0}
+
+.qg{border-top:1px solid var(--line)}
+.qg-row{display:grid;grid-template-columns:220px minmax(0,1fr);gap:8px 16px;padding:10px 0;border-bottom:1px solid var(--line);align-items:start}
+.qg-row textarea{resize:vertical}
+.qg-row p{margin:10px 0 0}
+@media(max-width:640px){.qg-row{grid-template-columns:1fr}}
+
+details{border:1px solid var(--line);padding:0 14px}
+summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600}
+
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:2px solid var(--ink);margin-top:20px}
+.tabs button{border-radius:4px 4px 0 0;border-bottom:0}
+.tabs button[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft)}
+
+/* 하단 */
+.bar{background:var(--card);border-top:1px solid var(--line);padding:10px 0}
+.bar .wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar .mid{flex:1;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;font-size:15px}
+@media(min-width:700px){.bar{position:sticky;bottom:0}}
+@media(max-width:699px){.bar .mid{order:3;flex-basis:100%;justify-content:flex-start} #next{margin-left:auto}}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+
+@media print{
+  body *{visibility:hidden}
+  #out,#out *{visibility:visible}
+  #out{position:absolute;left:0;top:0;width:100%;border:0}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><h1>하네스 빌더</h1><p>나만의 AI 업무 설정 한 장 만들기</p></div>
+    <nav aria-label="진행 단계"><ol id="steps"></ol></nav>
+    <div id="meter"></div>
+  </div>
+</header>
+
+<main class="wrap layout" id="layout">
+  <section id="card" class="card"></section>
+  <aside id="preview" class="preview" aria-label="실시간 미리보기">
+    <h2>실시간 미리보기</h2>
+    <p class="muted small" style="margin:0">② AI 도구 지침 (HARNESS) — 입력할 때마다 바로 바뀌어요.</p>
+    <pre id="pv"></pre>
+  </aside>
+</main>
+
+<footer class="bar">
+  <div class="wrap">
+    <button id="prev">이전</button>
+    <div class="mid">
+      <span>예시 불러오기:</span>
+      <button data-ex="lesson">수업 예시 (해저확장설 학습지)</button>
+      <button data-ex="doc">업무 예시 (현장체험학습 가정통신문)</button>
+      <button id="reset">처음부터 다시</button>
+    </div>
+    <button id="next" class="primary">다음</button>
+  </div>
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   설정 — 화면 문구·추천 규칙·템플릿을 바꾸고 싶으면 이 부분만 고치세요.
+   {학년}처럼 중괄호 안에는 아래 CONTEXT_FIELDS의 k 값을 씁니다.
+   {k:을} {k:이} {k:은} {k:와} {k:로} 처럼 쓰면 조사(을/를 등)가 자동으로 붙습니다.
+   ===================================================================== */
+
+// 단계 이름, '쉽게 말하면' 설명, 비유
+const STEPS = [
+  {nav:'업무', title:'업무 고르기 — 할 일 (TASK)', easy:'AI에게 맡길 일을 한 줄로 적어요. 자주 반복하는 일일수록 좋아요.', like:'식당에서 주문서를 쓰는 것과 같아요. 무엇을 원하는지부터 정해요.'},
+  {nav:'상황', title:'AI가 알아야 할 상황 (CONTEXT)', easy:'AI는 우리 반 교실에 한 번도 와 본 적이 없어요.', like:'대신 수업을 맡아 줄 선생님께 남기는 메모처럼 적어 주세요.'},
+  {nav:'방법', title:'항상 지킬 방법 (SKILL)', easy:'선생님이 자료를 만들 때 늘 지키는 원칙을 적어요.', like:'업무 매뉴얼 한 장이라고 생각하세요.'},
+  {nav:'확인 기준', title:'결과 확인 기준 (QUALITY GATE)', easy:'결과를 받기 전에 무엇을 확인할지 정해요.', like:'공항 검색대처럼, 이 기준을 통과한 결과만 학생에게 가요.'},
+  {nav:'(도구)', title:'AI가 쓸 도구 (TOOLS) — 선택', easy:'AI가 쓸 수 있는 기능을 알려 줘요. 오늘은 건너뛰어도 됩니다.', like:'요리사에게 오븐과 믹서기를 써도 된다고 알려 주는 것과 같아요.'},
+  {nav:'완성', title:'완성 — 나만의 AI 업무 설정 (HARNESS)', easy:'세 가지 결과를 복사해서 AI 도구에 붙여 넣어요.', like:'한 번 맞춰 둔 설정 한 장이면, 다음부터는 한 줄만 말해도 돼요.'},
+];
+
+// 상황(CONTEXT) 입력 칸
+// star: 2=★★ 가장 중요, 1=★ 중요, 0=보통
+// fixed: true면 '바뀌지 않는 상황' → ② 지침에 들어감. 나머지는 매번 요청할 때 알려 줌.
+const CONTEXT_FIELDS = {
+  lesson: {name:'수업 자료형', varying:'이번 차시, 학습 목표 등', fields:[
+    {k:'subject', label:'교과', ph:'과학', star:0, fixed:true},
+    {k:'grade',   label:'학년', ph:'중학교 1학년', star:1, fixed:true},
+    {k:'unit',    label:'단원', ph:'판 구조론', star:0},
+    {k:'prev',    label:'이전 차시', ph:'대륙이동설', star:0},
+    {k:'cur',     label:'이번 차시', ph:'해저확장설', star:1},
+    {k:'next',    label:'다음 차시', ph:'판의 경계', star:0},
+    {k:'goal',    label:'학습 목표', ph:'해양지각의 나이 분포로 해저확장설의 근거를 설명한다', star:1},
+    {k:'known',   label:'학생들이 이미 알고 있는 것', ph:'지각·맨틀 구분까지만 (판은 아직)', star:2},
+    {k:'misc',    label:'예상되는 어려움 / 오개념', ph:'‘맨틀 = 액체’', star:2},
+    {k:'cls',     label:'학급 특성', ph:'그래프 해석이 약한 반', star:0, fixed:true},
+    {k:'time',    label:'수업 시간', ph:'45분', star:0, fixed:true},
+    {k:'ref',     label:'참고자료', ph:'교과서 52~55쪽, 작년 PPT', star:0},
+    {k:'out',     label:'출력물 형태·분량', ph:'슬라이드 10장 + 활동지 1장', star:1, fixed:true},
+  ]},
+  doc: {name:'업무 문서형', varying:'목적, 이미 정해진 것 등', fields:[
+    {k:'reader',  label:'읽는 사람', ph:'1학년 학부모', star:1, fixed:true},
+    {k:'purpose', label:'목적', ph:'현장체험학습 일정과 준비물 안내', star:1},
+    {k:'decided', label:'이미 정해진 것', ph:'10월 24일, ○○과학관, 도시락 지참', star:2},
+    {k:'caution', label:'주의할 점', ph:'개인정보 넣지 않기, 비용 표현 정확히', star:2, fixed:true},
+    {k:'form',    label:'형식·분량', ph:'학교 가정통신문 양식, A4 1쪽', star:1, fixed:true},
+    {k:'ref',     label:'참고자료', ph:'작년 안내문', star:0},
+  ]},
+};
+
+// 업무 유형 프리셋: group = 어떤 CONTEXT 칸을 쓸지, qg = 기본으로 체크할 확인 기준, skills = 추천 규칙 칩
+const PRESETS = {
+  ppt:     {label:'수업 PPT', group:'lesson', qg:['fact','level'], skills:['학습목표를 첫 장에 쓴다','한 장에 핵심 메시지 하나','글보다 그림·도식 중심','교과서 용어를 그대로 쓴다','마지막 장에 확인 질문 2~3개']},
+  sheet:   {label:'학습지', group:'lesson', qg:['fact','level','misc'], skills:['학습목표를 맨 앞에 쓴다','핵심 개념 정리 → 그림 → 문항 순서','쉬운 문항에서 어려운 문항 순으로','정답과 해설은 따로 분리','확인 문제 3개로 마무리']},
+  exam:    {label:'평가문항', group:'lesson', qg:['fact','level','misc'], skills:['성취기준과 문항을 짝지어 표시','난이도(상·중·하) 표시','정답이 하나로만 정해지게','함정 선지 금지','해설에 오답 이유 포함']},
+  explain: {label:'학생용 설명자료', group:'lesson', qg:['fact','level'], skills:['한 문장은 짧게','어려운 낱말은 괄호로 풀이','일상 속 예시 하나 넣기','마지막에 한 줄 요약']},
+  visual:  {label:'시각자료', group:'lesson', qg:['fact','misc','copyright'], skills:['핵심 관계 1~2개만 그린다','글자는 최소로','오개념을 부르는 표현을 피한다','출처를 표기한다']},
+  notice:  {label:'가정통신문', group:'doc', qg:['privacy','format','fact'], skills:['첫 문장에 날짜와 핵심을 쓴다','한 문장은 두 줄을 넘기지 않는다','준비물·일정은 표로','문의처를 맨 아래에']},
+  doc:     {label:'업무 문서', group:'doc', qg:['fact','format','privacy'], skills:['결론을 먼저 쓴다','학교 양식의 항목 순서를 따른다','수치·날짜는 다시 확인 표시','1쪽 이내']},
+  custom:  {label:'직접 입력', noun:'자료', group:null, qg:['fact'], skills:[]}, // group은 STEP 0에서 고름
+};
+
+// 입력값에서 자동으로 만들어지는 규칙. needs의 칸이 모두 채워졌을 때만 생김.
+const AUTO_RULES = [
+  {id:'grade', needs:['grade'], skill:'{grade} 학생이 이해할 수 있는 낱말과 문장으로 쓴다', qg:'level'},
+  {id:'known', needs:['known'], skill:'학생들이 이미 아는 것은 ‘{known}’이므로, 아직 배우지 않은 개념은 쓰지 않거나 풀어서 설명한다'},
+  {id:'misc',  needs:['misc'],  skill:'{misc:이} 생기지 않도록 그런 표현을 피하고, 필요하면 바른 개념과 비교해 다룬다', qg:'misc'},
+  {id:'time',  needs:['time'],  skill:'{time} 안에 끝낼 수 있는 분량으로 만든다', qg:'format'},
+  {id:'cls',   needs:['cls'],   skill:'{cls:을} 고려해 해당 부분을 더 쉽게, 단계적으로 제시한다'},
+  {id:'link',  needs:['prev','next'], skill:'{prev:와} 연결해 시작하고, {next:로} 이어질 질문으로 끝낸다'},
+  {id:'ref',   needs:['ref'], qg:'source'},
+  {id:'doc',   group:'doc', qg:'privacy'},
+];
+
+// 결과 확인 기준(QUALITY GATE): text의 {칸}이 비어 있으면 fallback 문장을 씀
+const QG_DEFAULTS = [
+  {k:'fact',      label:'사실 정확성', text:'수치·연도·용어·정답을 교과서 또는 공식 자료와 대조했는가'},
+  {k:'level',     label:'학생 수준',   text:'{grade} 학생에게 어려운 낱말이 없는가 (있으면 풀이를 붙였는가)', fallback:'학생에게 어려운 낱말이 없는가 (있으면 풀이를 붙였는가)'},
+  {k:'misc',      label:'오개념',      text:'{misc} 등 잘못된 개념을 부르는 표현이 없는가', fallback:'잘못된 개념을 부르는 표현이 없는가'},
+  {k:'source',    label:'출처',        text:'그림·자료·인용에 출처를 적었는가'},
+  {k:'privacy',   label:'개인정보',    text:'학생·학부모의 실명, 연락처, 성적이 들어가지 않았는가'},
+  {k:'copyright', label:'저작권',      text:'사용 허락이 분명한 이미지·글꼴·자료만 썼는가'},
+  {k:'format',    label:'형식',        text:'형태·분량이 ‘{shape}’에 맞고 학교 양식을 따랐는가', fallback:'요청한 형태·분량과 학교 양식에 맞는가'},
+];
+
+// 도구(TOOLS): text가 결과물에 들어감
+const TOOLS = [
+  {k:'file',  label:'파일 (작년 자료 참고)', text:'사용할 수 있다면 첨부한 파일(작년 자료 등)을 참고한다'},
+  {k:'web',   label:'웹 검색', text:'사용할 수 있다면 웹 검색으로 사실을 확인하고 출처를 적는다'},
+  {k:'image', label:'이미지 생성', text:'사용할 수 있다면 이미지 생성 기능으로 필요한 그림을 만든다'},
+  {k:'data',  label:'데이터·그래프', text:'사용할 수 있다면 데이터 분석·그래프 기능을 활용한다'},
+  {k:'ext',   label:'외부 서비스 (Canva, 캘린더 등)', text:'사용할 수 있다면 연결된 외부 서비스(Canva, 캘린더 등)를 활용한다'},
+];
+
+// 결과물 템플릿. 빈 줄로 나뉜 덩어리 안의 {칸}이 비어 있으면 그 덩어리는 통째로 빠집니다.
+// context/fixedContext/skills/gates/tools/list/hint는 앱이 만들어 넣는 값입니다.
+const TEMPLATES = {
+  run:
+`아래 상황과 방법, 확인 기준에 맞춰 {task:을} 만들어 주세요.
+
+## 상황 (CONTEXT)
+{context}
+
+## 항상 지킬 방법 (SKILL)
+{skills}
+
+## 결과 확인 기준 (QUALITY GATE)
+결과를 보여 주기 전에 아래 기준으로 스스로 점검하고, 맨 끝에 '점검 결과'를 항목별로 ○/△로 짧게 적어 주세요.
+{gates}
+
+## 사용할 수 있는 도구 (선택)
+{tools}
+
+정보가 부족해 확신하기 어려운 부분은 지어내지 말고 [확인 필요]라고 표시해 주세요.`,
+
+  harness:
+`# 나의 AI 업무 설정: {task}
+
+## 역할
+당신은 {who} 작업을 돕는 조수입니다.
+아래 상황·방법·기준을 항상 지킵니다.
+
+## 기본 상황 (CONTEXT)
+{fixedContext}
+
+※ 매번 바뀌는 정보({varying})는 요청할 때 알려 드립니다. 빠져 있으면 먼저 물어봐 주세요.
+
+## 항상 지킬 방법 (SKILL)
+{skills}
+
+## 결과 확인 기준 (QUALITY GATE)
+결과를 내기 전에 아래 기준으로 스스로 점검하고, 끝에 점검 결과를 짧게 적습니다.
+{gates}
+
+## 사용할 수 있는 도구 (선택)
+{tools}
+
+## 하지 말 것
+- 확인되지 않은 사실을 지어내지 않습니다. 모르면 [확인 필요]로 표시합니다.
+- 학생·학부모의 개인정보를 요구하거나 결과물에 넣지 않습니다.`,
+
+  short:
+`# 다음부터 쓸 짧은 요청: {task}
+
+② 지침을 AI 도구에 저장해 두면, 다음부터는 아래처럼 한 줄만 써도 돼요.
+
+{list}
+
+{hint}`,
+  shortHint:'[ ] 부분은 그때그때 바꿔 넣으세요.',
+  // 짧은 요청 예시: 빈 칸은 [항목명]으로 남겨 바꿔 쓰게 함
+  shortLines: {
+    lesson:['이번 주 {type} 만들어 줘. 이번 차시는 {cur}, 학습 목표는 ‘{goal}’.',
+            '{next} 차시용으로도 같은 방식으로 만들어 줘.',
+            '{unit} 단원 {type} 하나 더 만들어 줘. 학생들이 이미 아는 것은 {known}, 헷갈리기 쉬운 것은 {misc}.'],
+    doc:   ['이번 {type} 써 줘. 정해진 것: {decided}.',
+            '이번 {type} 써 줘. 읽는 사람은 {reader}, 목적은 {purpose}.',
+            '다음 {type}도 같은 형식으로 써 줘. 정해진 것: [날짜, 장소 등].'],
+  },
+};
+
+const RESULT_TABS = [
+  {name:'① 바로 실행 프롬프트', help:'지금 AI 채팅창에 그대로 붙여 넣으면 바로 결과가 나와요.', file:'1_바로실행프롬프트.md'},
+  {name:'② AI 도구 지침 (하네스)', help:'SenGPT ‘나만의 비서’, ChatGPT·Claude 프로젝트의 지침 칸에 저장해 두고 계속 써요.', file:'2_하네스지침.md'},
+  {name:'③ 다음부터 쓸 짧은 요청', help:'②를 저장한 뒤에는 이렇게 한 줄만 써도 돼요.', file:'3_짧은요청.md'},
+];
+
+// 예시 불러오기
+const EXAMPLES = {
+  lesson:{type:'sheet', task:'매주 만드는 중1 과학 단원 학습지 (A4 2쪽)',
+    ctx:{subject:'과학', grade:'중학교 1학년', unit:'판 구조론', prev:'대륙이동설', cur:'해저확장설', next:'판의 경계',
+         goal:'해양지각의 나이 분포로 해저확장설의 근거를 설명한다', known:'지각·맨틀 구분까지만 (판은 아직)', misc:'‘맨틀 = 액체’',
+         cls:'그래프 해석이 약한 반', time:'45분', ref:'교과서 52~55쪽', out:'A4 2쪽 학습지'},
+    skills:['학습목표를 맨 앞에 쓴다','핵심 개념 → 그림 1개 → 빈칸 5문항 → 서술형 1문항 순서로 구성한다','교과서 용어를 그대로 쓴다'],
+    qgOn:{privacy:true, format:false}},
+  doc:{type:'notice', task:'1학년 현장체험학습 안내 가정통신문',
+    ctx:{reader:'1학년 학부모', purpose:'일정과 준비물 안내', decided:'10월 24일(금), ○○과학관, 8:40 학교 집결, 도시락 지참',
+         caution:'개인정보 넣지 않기, 비용 표현 정확히', form:'학교 가정통신문 양식, A4 1쪽'},
+    skills:PRESETS.notice.skills.slice()},
+};
+
+/* ===================== 여기부터는 동작 코드 ===================== */
+
+const KEY = 'harness-builder-v1';
+const blank = () => ({step:0, type:'', group:'lesson', task:'', ctx:{}, skills:[], autoOff:[], qgOn:{}, qgText:{}, tools:[], tab:0});
+let state = load();
+
+function load(){ try { return {...blank(), ...JSON.parse(localStorage.getItem(KEY))}; } catch { return blank(); } }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// 조사 자동 선택: 마지막 글자의 받침으로 을/를 등을 고름. 끝의 (괄호)와 따옴표는 무시.
+const JOSA = {을:['을','를'], 이:['이','가'], 은:['은','는'], 와:['과','와'], 로:['으로','로']};
+function josa(word, j){
+  const w = word.replace(/\s*\([^)]*\)\s*$/, '').replace(/[\s'"‘’“”\])}.]+$/, '');
+  const c = w.slice(-1), code = c.charCodeAt(0) - 0xAC00;
+  let jong;
+  if (code >= 0 && code < 11172) jong = code % 28;
+  else if (/\d/.test(c)) jong = [21,8,0,16,0,0,1,8,8,0][c]; // 영 일 이 삼 사 오 육 칠 팔 구
+  else return j === '로' ? '(으)로' : `${JOSA[j][0]}(${JOSA[j][1]})`;
+  if (j === '로') return (jong === 0 || jong === 8) ? '로' : '으로';
+  return JOSA[j][jong ? 0 : 1];
+}
+
+// {칸} 채우기. 빈 칸이 있으면 null (blankFn이 있으면 그걸로 대신 채움)
+function fill(tpl, v, blankFn){
+  let ok = true;
+  const out = tpl.replace(/\{(\w+)(?::([을이은와로]))?\}/g, (_, k, j) => {
+    let s = v[k];
+    if (!s) { if (!blankFn) { ok = false; return ''; } s = blankFn(k); }
+    return j ? s + josa(s, j) : s;
+  });
+  return ok ? out : null;
+}
+const fillDoc = (tpl, v) => tpl.split('\n\n').map(p => fill(p, v)).filter(Boolean).join('\n\n');
+
+const preset = () => PRESETS[state.type];
+const group = () => (preset() && (preset().group || state.group)) || 'lesson';
+const fieldsNow = () => CONTEXT_FIELDS[group()].fields;
+
+function vars(){
+  const v = {}, p = preset();
+  for (const f of fieldsNow()) v[f.k] = (state.ctx[f.k] || '').trim().replace(/\.$/, '');
+  v.type = p ? (p.noun || p.label) : '자료';
+  v.task = state.task.trim() || v.type;
+  v.shape = v.out || v.form || '';
+  v.who = (v.subject ? v.subject + ' ' : '') + '교사의 ' + v.type;
+  v.varying = CONTEXT_FIELDS[group()].varying;
+  return v;
+}
+const activeAuto = v => AUTO_RULES.filter(r => (!r.group || r.group === group()) && (r.needs || []).every(k => v[k]));
+const autoSkills = v => activeAuto(v).filter(r => r.skill).map(r => ({id:r.id, text:fill(r.skill, v)}));
+const autoQG = v => new Set(activeAuto(v).map(r => r.qg).filter(Boolean));
+const skillList = v => [...state.skills.map(s => s.trim()).filter(Boolean),
+                        ...autoSkills(v).filter(a => !state.autoOff.includes(a.id)).map(a => a.text)];
+const qgOn = (k, v) => k in state.qgOn ? state.qgOn[k] : (preset()?.qg.includes(k) || autoQG(v).has(k));
+const qgDefault = (q, v) => fill(q.text, v) ?? q.fallback;
+const gateList = v => QG_DEFAULTS.filter(q => qgOn(q.k, v)).map(q => `- ${q.label}: ${(state.qgText[q.k] || '').trim() || qgDefault(q, v)}`);
+
+function outputs(){
+  const v = vars(), fs = fieldsNow();
+  const lines = list => list.filter(f => v[f.k]).map(f => `- ${f.label}: ${v[f.k]}`).join('\n');
+  const d = {...v,
+    context: lines(fs),
+    fixedContext: lines(fs.filter(f => f.fixed)),
+    skills: skillList(v).map((s, i) => `${i + 1}. ${s}`).join('\n'),
+    gates: gateList(v).join('\n'),
+    tools: TOOLS.filter(t => state.tools.includes(t.k)).map(t => '- ' + t.text).join('\n'),
+  };
+  const label = k => fs.find(f => f.k === k)?.label || k;
+  const list = TEMPLATES.shortLines[group()].map(t => `- “${fill(t, v, k => `[${label(k)}]`)}”`).join('\n');
+  return [fillDoc(TEMPLATES.run, d), fillDoc(TEMPLATES.harness, d),
+          fillDoc(TEMPLATES.short, {...d, list, hint: list.includes('[') ? TEMPLATES.shortHint : ''})];
+}
+
+/* ---------- 화면 ---------- */
+
+const head = i => `<p class="eyebrow">STEP ${i}</p><h2>${STEPS[i].title}</h2>
+  <div class="easy"><p><b>쉽게 말하면</b> ${STEPS[i].easy}</p><p><b>비유</b> ${STEPS[i].like}</p></div>`;
+const PRIVACY = '<p class="privacy">개인정보 주의: 학생 이름·연락처·성적은 입력하지 마세요.</p>';
+const stars = n => n === 2 ? '<span class="star">★★ 가장 중요</span>' : n === 1 ? '<span class="star">★ 중요</span>' : '';
+const radio = (name, val, label, on) => `<label class="opt"><input type="radio" name="${name}" id="${name}-${val}" value="${val}" ${on ? 'checked' : ''}><span>${label}</span></label>`;
+
+const VIEWS = [
+  () => `<fieldset><legend>업무 유형 (하나만 고르세요)</legend><div class="presets">
+      ${Object.entries(PRESETS).map(([k, p]) => radio('type', k, p.label, state.type === k)).join('')}</div></fieldset>
+    ${state.type === 'custom' ? `<fieldset class="inline"><legend>어떤 쪽에 가깝나요?</legend>
+      ${radio('group', 'lesson', '수업 자료', state.group === 'lesson')}${radio('group', 'doc', '업무 문서', state.group === 'doc')}</fieldset>` : ''}
+    <div class="field"><label for="task">할 일 한 줄</label>
+      <input id="task" data-task value="${esc(state.task)}" placeholder="매주 만드는 중1 과학 단원 학습지 (A4 2쪽)"></div>`,
+
+  () => { const v = vars(); return `${PRIVACY}
+    <p class="muted">${preset() ? `업무 유형: <b>${preset().label}</b> → ${CONTEXT_FIELDS[group()].name} 칸이에요.` : 'STEP 0에서 업무 유형을 고르면 알맞은 칸이 나와요. 지금은 수업 자료형 칸이에요.'}
+      빈칸이 있어도 괜찮아요. ★★ 칸부터 채워 보세요.</p>
+    <div class="grid">${fieldsNow().map(f => `<div class="field"><label for="f-${f.k}">${f.label}${stars(f.star)}</label>
+      <input id="f-${f.k}" data-ctx="${f.k}" value="${esc(state.ctx[f.k] || '')}" placeholder="${esc(f.ph)}">
+      ${f.star === 2 ? `<p class="note" id="n-${f.k}" ${v[f.k] ? 'hidden' : ''}>이 칸이 결과물 수준을 가장 크게 바꿔요. 한 줄이라도 적어 보세요.</p>` : ''}</div>`).join('')}</div>`; },
+
+  () => { const v = vars(), chips = preset()?.skills || [], autos = autoSkills(v), n = state.skills.length; return `
+    <h3 style="margin-top:0">추천 규칙 — 누르면 내 규칙에 추가돼요</h3>
+    ${chips.length ? `<div class="chips">${chips.map((t, i) => { const has = state.skills.includes(t);
+        return `<button class="chip" id="chip-${i}" data-act="chip" data-i="${i}" ${has ? 'disabled' : ''}>${has ? '✓ 추가됨: ' : '+ '}${esc(t)}</button>`; }).join('')}</div>`
+      : `<p class="muted">${state.type === 'custom' ? '직접 입력한 업무는 추천 규칙이 없어요. 아래에 직접 적어 주세요.' : 'STEP 0에서 업무 유형을 고르면 추천 규칙이 보여요.'}</p>`}
+    <h3>내 규칙 (${n}개)</h3>
+    ${n ? `<ol class="rules">${state.skills.map((t, i) => `<li><span class="num" aria-hidden="true">${i + 1}.</span>
+        <label class="sr" for="s-${i}">규칙 ${i + 1}</label><input id="s-${i}" data-skill="${i}" value="${esc(t)}">
+        <button id="up-${i}" data-act="up" data-i="${i}" aria-label="규칙 ${i + 1} 위로" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button id="down-${i}" data-act="down" data-i="${i}" aria-label="규칙 ${i + 1} 아래로" ${i === n - 1 ? 'disabled' : ''}>↓</button>
+        <button data-act="del" data-i="${i}" aria-label="규칙 ${i + 1} 삭제">삭제</button></li>`).join('')}</ol>` : ''}
+    <div class="add"><label class="sr" for="newSkill">새 규칙</label>
+      <input id="newSkill" placeholder="직접 입력: 예) 교과서 용어를 그대로 쓴다"><button data-act="add">추가</button></div>
+    ${n >= 8 ? '<p class="note">규칙이 너무 많으면 AI가 헷갈릴 수 있어요. 3~7개를 권장해요.</p>' : '<p class="muted small">3~7개를 권장해요.</p>'}
+    <h3>자동으로 추가된 규칙</h3>
+    ${autos.length ? `<p class="muted small" style="margin-top:0">STEP 1에 적은 상황에서 만들어졌어요. 체크를 풀면 결과에서 빠져요.</p>
+      <div class="auto">${autos.map(a => `<label class="check"><input type="checkbox" id="auto-${a.id}" data-act="auto" data-k="${a.id}" ${state.autoOff.includes(a.id) ? '' : 'checked'}>
+        <span class="badge">자동 추가됨</span> ${esc(a.text)}</label>`).join('')}</div>`
+      : '<p class="muted">STEP 1에 학년·오개념 등을 적으면 여기에 규칙이 자동으로 생겨요.</p>'}`; },
+
+  () => { const v = vars(), auto = autoQG(v); return `
+    <p class="muted" style="margin-top:0">체크하면 ‘어떻게 확인할지’ 문장이 채워져요. 문장은 직접 고쳐도 돼요.</p>
+    <div class="qg">${QG_DEFAULTS.map(q => { const on = qgOn(q.k, v); return `<div class="qg-row">
+      <label class="check"><input type="checkbox" id="qg-${q.k}" data-act="qg" data-k="${q.k}" ${on ? 'checked' : ''}> ${q.label}
+        ${auto.has(q.k) && !(q.k in state.qgOn) ? '<span class="badge">자동 체크됨</span>' : ''}</label>
+      ${on ? `<div><label class="sr" for="qt-${q.k}">${q.label}: 어떻게 확인할지</label>
+        <textarea id="qt-${q.k}" data-qgtext="${q.k}" rows="2">${esc(state.qgText[q.k] || qgDefault(q, v))}</textarea></div>`
+        : '<p class="muted small">체크하지 않음</p>'}</div>`; }).join('')}</div>`; },
+
+  () => `<details ${state.tools.length ? 'open' : ''}><summary>도구 펼치기&nbsp;<span class="muted">(오늘은 건너뛰어도 됩니다)</span></summary>
+      ${TOOLS.map(t => `<label class="check"><input type="checkbox" id="tool-${t.k}" data-act="tool" data-k="${t.k}" ${state.tools.includes(t.k) ? 'checked' : ''}> ${t.label}</label>`).join('')}
+      <p class="muted small">체크한 도구는 결과물에 “사용할 수 있다면 ~을 활용한다” 형태로만 들어가요.</p></details>`,
+
+  () => { const t = RESULT_TABS[state.tab]; return `${PRIVACY}
+    <div class="tabs" role="tablist" aria-label="결과물">${RESULT_TABS.map((r, i) =>
+      `<button role="tab" id="tab-${i}" data-act="tab" data-i="${i}" aria-selected="${i === state.tab}" aria-controls="panel">${r.name}</button>`).join('')}</div>
+    <div id="panel" role="tabpanel" aria-labelledby="tab-${state.tab}">
+      <p class="muted">${t.help}</p>
+      <div class="actions"><button class="primary" data-act="copy">복사하기</button><button data-act="dl">.md로 내려받기</button><button data-act="print">인쇄</button></div>
+      <pre id="out" class="out">${esc(outputs()[state.tab])}</pre>
+    </div>
+    <h3>어디에 넣나요?</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>도구</th><th>지침 칸에 ② 붙여 넣기</th><th>참고 파일</th></tr></thead>
+      <tbody><tr><td>SenGPT</td><td>‘나만의 비서’ → 역할·지침 칸</td><td>참고 파일에 작년 자료 등</td></tr>
+      <tr><td>ChatGPT</td><td>프로젝트 → 지침</td><td>프로젝트 파일</td></tr>
+      <tr><td>Claude</td><td>프로젝트 지침 또는 Skill</td><td>프로젝트 파일 / Cowork 연결 폴더</td></tr></tbody>
+    </table></div>
+    <p class="muted small">※ 메뉴 이름은 서비스 업데이트에 따라 달라질 수 있어요.</p>`; },
+];
+
+function render(focusId){
+  focusId ??= document.activeElement?.id;
+  const s = state.step;
+  $('#steps').innerHTML = STEPS.map((x, i) => `<li><button id="nav-${i}" data-go="${i}" ${i === s ? 'aria-current="step"' : ''}>${i < s ? '✓ ' : ''}${x.nav}</button></li>`).join('');
+  $('#card').innerHTML = head(s) + VIEWS[s]();
+  $('#layout').classList.toggle('full', s === 5);
+  $('#preview').hidden = s === 5;
+  $('#prev').disabled = s === 0;
+  $('#next').disabled = s === 5;
+  $('#next').textContent = s === 4 ? '완성 보기' : '다음';
+  live();
+  if (focusId) document.getElementById(focusId)?.focus({preventScroll:true});
+}
+
+function live(){
+  const v = vars();
+  $('#pv').textContent = outputs()[1];
+  const items = [
+    {label:'업무 유형', ok:!!state.type, step:0, star:1, id:'type-sheet'},
+    {label:'할 일 한 줄', ok:!!state.task.trim(), step:0, star:1, id:'task'},
+    ...fieldsNow().map(f => ({label:f.label, ok:!!v[f.k], step:1, star:f.star, id:'f-' + f.k})),
+    {label:'내 규칙', ok:skillList(v).length > 0, step:2, star:1, id:'newSkill'},
+    {label:'확인 기준', ok:gateList(v).length > 0, step:3, star:1, id:'qg-fact'},
+  ];
+  const w = i => i.star + 1, total = items.reduce((a, i) => a + w(i), 0);
+  const pct = Math.round(items.filter(i => i.ok).reduce((a, i) => a + w(i), 0) / total * 100);
+  const miss = items.filter(i => !i.ok && i.star).sort((a, b) => b.star - a.star).slice(0, 3);
+  $('#meter').innerHTML = `<strong>완성도 ${pct}%</strong><span class="gauge" aria-hidden="true"><i style="width:${pct}%"></i></span>
+    ${miss.length ? '<span>빠진 핵심 칸:</span>' + miss.map(m => `<button data-go="${m.step}" data-focus="${m.id}">${m.star > 1 ? '★★' : '★'} ${esc(m.label)}</button>`).join('')
+                  : '<span>핵심 칸을 모두 채웠어요.</span>'}`;
+}
+
+function go(step, focusId){
+  state.step = Math.max(0, Math.min(5, step));
+  save(); render(focusId || null); window.scrollTo(0, 0);
+}
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+async function copy(text){
+  try { await navigator.clipboard.writeText(text); }
+  catch { // file:// 등 클립보드 API가 막힌 환경
+    const a = document.createElement('textarea'); a.value = text; document.body.append(a); a.select(); document.execCommand('copy'); a.remove();
+  }
+  toast('복사됐어요');
+}
+
+function download(text, name){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type:'text/markdown;charset=utf-8'}));
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ---------- 이벤트 ---------- */
+
+const card = $('#card');
+card.addEventListener('input', e => {
+  const t = e.target, d = t.dataset;
+  if (d.ctx) { state.ctx[d.ctx] = t.value; const n = $('#n-' + d.ctx); if (n) n.hidden = !!t.value.trim(); }
+  else if ('task' in d) state.task = t.value;
+  else if (d.skill) state.skills[+d.skill] = t.value;
+  else if (d.qgtext) state.qgText[d.qgtext] = t.value;
+  else return;
+  save(); live();
+});
+
+card.addEventListener('change', e => {
+  const t = e.target, k = t.dataset.k;
+  if (t.name === 'type') { state.type = t.value; state.qgOn = {}; }
+  else if (t.name === 'group') state.group = t.value;
+  else if (t.dataset.act === 'qg') state.qgOn[k] = t.checked;
+  else if (t.dataset.act === 'auto') state.autoOff = t.checked ? state.autoOff.filter(x => x !== k) : [...state.autoOff, k];
+  else if (t.dataset.act === 'tool') state.tools = t.checked ? [...state.tools, k] : state.tools.filter(x => x !== k);
+  else return;
+  save(); render(t.id);
+});
+
+function addSkill(){
+  const t = $('#newSkill').value.trim();
+  if (t) state.skills.push(t);
+  save(); render('newSkill');
+}
+card.addEventListener('keydown', e => {
+  if (e.target.id === 'newSkill' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addSkill(); }
+});
+
+card.addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const i = +b.dataset.i, s = state.skills, out = () => outputs()[state.tab];
+  let focus;
+  switch (b.dataset.act) {
+    case 'chip': s.push(preset().skills[i]); focus = 'newSkill'; break;
+    case 'up':   [s[i - 1], s[i]] = [s[i], s[i - 1]]; focus = i - 1 ? 'up-' + (i - 1) : 'down-0'; break;
+    case 'down': [s[i + 1], s[i]] = [s[i], s[i + 1]]; focus = i + 1 < s.length - 1 ? 'down-' + (i + 1) : 'up-' + (i + 1); break;
+    case 'del':  s.splice(i, 1); focus = 'newSkill'; break;
+    case 'add':  return addSkill();
+    case 'tab':  state.tab = i; focus = 'tab-' + i; break;
+    case 'copy': return copy(out());
+    case 'dl':   return download(out(), RESULT_TABS[state.tab].file);
+    case 'print': return window.print();
+  }
+  save(); render(focus);
+});
+
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]');
+  if (g) go(+g.dataset.go, g.dataset.focus);
+});
+$('#prev').onclick = () => go(state.step - 1);
+$('#next').onclick = () => go(state.step + 1);
+$('#reset').onclick = () => {
+  if (!confirm('입력한 내용을 모두 지울까요? 되돌릴 수 없어요.')) return;
+  try { localStorage.removeItem(KEY); } catch {}
+  state = blank(); render(); window.scrollTo(0, 0);
+};
+document.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => {
+  const has = state.type || state.task || state.skills.length || Object.values(state.ctx).some(Boolean);
+  if (has && !confirm('지금 입력한 내용이 예시로 바뀌어요. 계속할까요?')) return;
+  state = {...blank(), step:state.step, ...JSON.parse(JSON.stringify(EXAMPLES[b.dataset.ex]))};
+  save(); render(); toast('예시를 불러왔어요');
+});
+
+render();
+
+// 자체 점검: 주소 끝에 #selftest 를 붙여 열면 콘솔에 결과가 나옵니다.
+if (location.hash === '#selftest') {
+  const eq = (a, b) => { if (a !== b) throw new Error(`${a} !== ${b}`); };
+  eq(josa('대륙이동설', '와'), '과'); eq(josa('판의 경계', '로'), '로'); eq(josa('45분', '로'), '으로');
+  eq(josa('‘맨틀 = 액체’', '이'), '가'); eq(josa('학습지 (A4 2쪽)', '을'), '를'); eq(josa('ABC', '을'), '을(를)');
+  eq(fill('이전 차시: {prev}', {prev:''}), null);
+  const saved = state;
+  for (const ex of Object.keys(EXAMPLES)) {
+    state = {...blank(), ...JSON.parse(JSON.stringify(EXAMPLES[ex]))};
+    for (const o of outputs()) if (/:\s*$|[{}]|undefined|null/m.test(o)) throw new Error(ex + ' 결과에 빈 항목: ' + o);
+  }
+  state = {...blank(), type:'sheet', ctx:{misc:'맨틀 = 액체'}};
+  if (!outputs()[0].includes('맨틀 = 액체가 생기지')) throw new Error('오개념 자동 규칙 없음');
+  state.ctx.misc = '';
+  if (outputs()[0].includes('생기지 않도록')) throw new Error('오개념을 지워도 규칙이 남음');
+  state = blank();
+  if (/:\s*$|[{}]|undefined/m.test(outputs().join('\n'))) throw new Error('빈 상태 결과에 빈 항목');
+  state = saved;
+  console.log('SELFTEST OK');
+}
+</script>
+</body>
+</html>
