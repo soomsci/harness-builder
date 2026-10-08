@@ -1,6 +1,13 @@
 {
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "**/.*", "**/.*/**", "*.md", "*.log"]
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/.*/**",
+      "*.md",
+      "*.log",
+      "Claude outputs/**"
+    ]
   }
 }

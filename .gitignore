@@ -1,2 +1,5 @@
 .firebase/
 *.log
+CLAUDE.md
+improvements_*.md
+Claude outputs/
