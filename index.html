@@ -113,10 +113,25 @@ th{background:var(--soft)}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.show{opacity:1}
 
+.fix-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+.fix-row p{margin:0}
+.fix-row .marks{display:flex;gap:6px;flex-wrap:wrap}
+.fix-row .marks .opt span{min-height:44px;padding:8px 12px}
+.fix-row .sugg{grid-column:1/-1}
+.marks .opt input:checked+span::before{content:none}
+@media(max-width:640px){.fix-row{grid-template-columns:1fr}}
+.log{list-style:none;padding:0;margin:0}
+.log li{padding:6px 0;border-bottom:1px solid var(--line)}
+#sheet{display:none}
+#sheet table{margin-top:12px} #sheet td.box{white-space:nowrap}
+
 @media print{
   body *{visibility:hidden}
   #out,#out *{visibility:visible}
   #out{position:absolute;left:0;top:0;width:100%;border:0}
+  body.print-sheet #out,body.print-sheet #out *{visibility:hidden}
+  body.print-sheet #sheet{display:block;position:absolute;left:0;top:0;width:100%}
+  body.print-sheet #sheet,body.print-sheet #sheet *{visibility:visible}
 }
 </style>
 </head>
@@ -151,6 +166,7 @@ th{background:var(--soft)}
   </div>
 </footer>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="sheet" aria-hidden="true"></div>
 
 <script>
 /* =====================================================================
@@ -164,9 +180,10 @@ const STEPS = [
   {nav:'업무', title:'업무 고르기 — 할 일', easy:'AI에게 맡길 일을 한 줄로 적어요. 자주 반복하는 일일수록 좋아요.', like:'식당에서 주문서를 쓰는 것과 같아요. 무엇을 원하는지부터 정해요.'},
   {nav:'상황', title:'AI가 알아야 할 상황 (Context)', easy:'AI는 우리 반 교실에 한 번도 와 본 적이 없어요.', like:'대신 수업을 맡아 줄 선생님께 남기는 메모처럼 적어 주세요.'},
   {nav:'방법', title:'항상 지킬 방법 (Skill)', easy:'선생님이 자료를 만들 때 늘 지키는 원칙을 적어요.', like:'업무 매뉴얼 한 장이라고 생각하세요.'},
-  {nav:'확인 기준', title:'결과 확인 기준', easy:'결과를 받기 전에 무엇을 확인할지 정해요.', like:'공항 검색대처럼, 이 기준을 통과한 결과만 학생에게 가요.'},
+  {nav:'확인 기준', title:'결과 확인 기준', easy:'결과를 받기 전에 무엇을 확인할지 정해요. 이 기준은 STEP 6에서 선생님이 직접 점검할 때도 써요.', like:'공항 검색대처럼, 이 기준을 통과한 결과만 학생에게 가요.'},
   {nav:'도구', title:'AI가 쓸 도구 (Tool) — 필요한 것만', easy:'AI가 쓸 수 있는 기능을 알려 줘요. 필요한 것만 체크하세요.', like:'요리사에게 오븐과 믹서기를 써도 된다고 알려 주는 것과 같아요.'},
-  {nav:'완성', title:'완성 — 나만의 AI 업무 설정 (하네스)', easy:'세 가지 결과를 복사해서 AI 도구에 붙여 넣어요.', like:'한 번 맞춰 둔 설정 한 장이면, 다음부터는 한 줄만 말해도 돼요.'},
+  {nav:'완성', title:'완성 — 나만의 AI 업무 설정 (하네스)', easy:'결과를 복사해서 AI 도구에 붙여 넣어요.', like:'한 번 맞춰 둔 설정 한 장이면, 다음부터는 한 줄만 말해도 돼요.'},
+  {nav:'고치기', title:'돌려 보고 고치기 — 피드백', easy:'AI가 만든 결과를 확인 기준으로 점검하고, 틀린 점은 규칙 한 줄로 고쳐요.', like:'같은 실수를 두 번 하지 않도록 업무 매뉴얼에 한 줄 덧붙이는 것과 같아요.'},
 ];
 
 // 상황(CONTEXT) 입력 칸
@@ -242,6 +259,18 @@ const TOOLS = [
   {k:'ext',   label:'외부 서비스 (Canva, 캘린더 등)', text:'사용할 수 있다면 연결된 외부 서비스(Canva, 캘린더 등)를 활용한다'},
 ];
 
+// 고치기(STEP 6): 확인 기준에서 △·✕가 나오면 보여 줄 추천 규칙. {칸}이 비면 fallback
+const FIX_SUGGEST = {
+  fact:     {text:'수치·연도·용어는 교과서와 다르거나 확실하지 않으면 [확인 필요]로 표시한다'},
+  level:    {text:'어려운 용어는 괄호로 풀이한다'},
+  misc:     {text:'{misc:와} 바른 개념을 나란히 비교하는 문장이나 문항을 넣는다', fallback:'헷갈리기 쉬운 개념은 바른 개념과 나란히 비교해 보여 준다'},
+  source:   {text:'그림·자료·인용마다 바로 아래에 출처를 적는다'},
+  privacy:  {text:'사람 이름이 들어갈 자리는 ○○○로 비워 둔다'},
+  copyright:{text:'이미지는 직접 그린 모식도나 공공누리 등 사용 허락이 분명한 자료만 쓴다'},
+  format:   {text:'분량은 ‘{shape}’을 넘지 않게 맞춘다', fallback:'요청한 형태·분량을 넘지 않게 맞춘다'},
+};
+const MARKS = [{v:'o', label:'○ 통과'}, {v:'d', label:'△ 아쉬움'}, {v:'x', label:'✕ 문제'}];
+
 // 결과물 템플릿. 빈 줄로 나뉜 덩어리 안의 {칸}이 비어 있으면 그 덩어리는 통째로 빠집니다.
 // context/fixedContext/skills/gates/tools/list/hint는 앱이 만들어 넣는 값입니다.
 const TEMPLATES = {
@@ -255,7 +284,7 @@ const TEMPLATES = {
 {skills}
 
 ## 결과 확인 기준
-결과를 보여 주기 전에 아래 기준으로 스스로 점검하고, 맨 끝에 '점검 결과'를 항목별로 ○/△로 짧게 적어 주세요.
+결과를 보여 주기 전에 아래 기준으로 스스로 점검하고, 맨 끝에 '점검 결과'를 항목별로 ○/△로 짧게 적어 주세요. 최종 확인은 제가 직접 합니다.
 {gates}
 
 ## 사용할 수 있는 도구 (선택)
@@ -264,7 +293,7 @@ const TEMPLATES = {
 정보가 부족해 확신하기 어려운 부분은 지어내지 말고 [확인 필요]라고 표시해 주세요.`,
 
   harness:
-`# 나의 AI 업무 설정: {task}
+`# 나의 AI 업무 설정: {title}
 
 ## 역할
 당신은 {who} 작업을 돕는 조수입니다.
@@ -279,7 +308,7 @@ const TEMPLATES = {
 {skills}
 
 ## 결과 확인 기준
-결과를 내기 전에 아래 기준으로 스스로 점검하고, 끝에 점검 결과를 짧게 적습니다.
+결과를 내기 전에 아래 기준으로 스스로 점검하고, 끝에 점검 결과를 짧게 적습니다. 이 점검은 1차 점검이며, 최종 확인은 선생님이 합니다.
 {gates}
 
 ## 사용할 수 있는 도구 (선택)
@@ -287,7 +316,29 @@ const TEMPLATES = {
 
 ## 하지 말 것
 - 확인되지 않은 사실을 지어내지 않습니다. 모르면 [확인 필요]로 표시합니다.
-- 학생·학부모의 개인정보를 요구하거나 결과물에 넣지 않습니다.`,
+- 학생·학부모의 개인정보를 요구하거나 결과물에 넣지 않습니다.
+
+## 고친 기록
+지난번 결과에서 고친 점입니다. 같은 실수를 반복하지 않도록 특히 주의합니다.
+{log}`,
+
+  review:
+`당신은 {who} 결과물을 검토하는 검토자입니다. 결과물을 직접 고쳐 쓰지 말고, 아래 기준으로 검사만 해 주세요.
+
+## 무엇을 만든 결과인가
+{about}
+
+## 확인 기준
+{gates}
+
+## 검토 방법
+1. 기준마다 ○(통과) · △(아쉬움) · ✕(문제)로 표시하고, 근거가 되는 부분을 결과물에서 짧게 인용합니다.
+2. 확실하지 않은 사실은 판단하지 말고 [선생님 확인 필요]로 표시합니다.
+3. △·✕ 항목은 고칠 방향을 한 줄로 적습니다.
+4. 마지막에 ‘지침에 추가할 규칙’을 1~2개, “~한다” 꼴의 한 문장으로 제안합니다.
+
+---
+아래에 검토할 결과물을 붙여 넣으세요.`,
 
   short:
 `# 다음부터 쓸 짧은 요청: {task}
@@ -314,12 +365,20 @@ const NOTICES = {
   resume:'이전에 입력한 내용이 남아 있어요. 공용 컴퓨터라면 다른 분의 입력일 수 있어요.',
   resumeKeep:'이어서 하기', resumeNew:'새로 시작',
   publicPc:'공용 컴퓨터라면 결과를 복사·내려받은 뒤 ‘처음부터 다시’를 눌러 주세요.',
+  reviewWhere:'④는 지침을 저장한 비서가 아니라 <b>새 채팅</b>에서 쓰세요. 같은 대화에서 검사하면 자기가 쓴 글을 후하게 볼 수 있어요.',
+  reviewNoGate:'STEP 3에서 확인 기준을 고르면 검토 기준이 들어가요.',
+  fixIntro:'① 프롬프트(또는 ② 지침을 저장한 비서)로 결과를 받은 뒤, 아래 기준마다 표시해 주세요.',
+  fixNoGate:'STEP 3에서 확인 기준을 먼저 골라 주세요.',
+  fixHelp:'AI가 틀린 점을 ‘~한다’ 꼴의 규칙 한 줄로 적어 보세요. 예) 어려운 용어는 괄호로 풀이한다',
+  fixHelp2:'④ 검토용 프롬프트가 제안한 규칙을 붙여 넣어도 돼요.',
+  fixDone:'v{ver}로 고쳤어요. ② 지침을 다시 복사해 비서에 붙여 넣으세요.',
 };
 
 const RESULT_TABS = [
   {name:'① 바로 실행 프롬프트', help:'지금 AI 채팅창에 그대로 붙여 넣으면 바로 결과가 나와요.', file:'1_바로실행프롬프트.md'},
   {name:'② AI 도구 지침 (하네스)', help:'SenGPT ‘나만의 비서’, ChatGPT·Claude 프로젝트의 지침 칸에 저장해 두고 계속 써요.', file:'2_하네스지침.md'},
   {name:'③ 다음부터 쓸 짧은 요청', help:'②를 저장한 뒤에는 이렇게 한 줄만 써도 돼요.', file:'3_짧은요청.md'},
+  {name:'④ 검토용 프롬프트', help:'결과를 받은 뒤 새 채팅(또는 다른 AI)에 이 글과 결과물을 함께 붙여 넣으세요. 만든 AI가 아닌 다른 눈으로 기준을 검사해요.', file:'4_검토용프롬프트.md'},
 ];
 
 // 예시 불러오기
@@ -339,9 +398,9 @@ const EXAMPLES = {
 /* ===================== 여기부터는 동작 코드 ===================== */
 
 const KEY = 'harness-builder-v1';
-const blank = () => ({step:0, type:'', group:'lesson', task:'', ctx:{}, skills:[], autoOff:[], qgOn:{}, qgText:{}, tools:[], tab:0});
+const blank = () => ({step:0, type:'', group:'lesson', task:'', ctx:{}, skills:[], autoOff:[], qgOn:{}, qgText:{}, tools:[], tab:0, ver:1, log:[], check:{}, fixes:[], fixedAt:{}});
 let state = load();
-const hasInput = () => !!(state.type || state.task || state.skills.length || Object.values(state.ctx).some(Boolean));
+const hasInput = () => !!(state.type || state.task || state.skills.length || state.log.length || Object.values(state.ctx).some(Boolean));
 let showResume = hasInput(); // 이번 접속에서 한 번만
 
 function load(){ try { return {...blank(), ...JSON.parse(localStorage.getItem(KEY))}; } catch { return blank(); } }
@@ -407,11 +466,27 @@ function outputs(){
     skills: skillList(v).map((s, i) => `${i + 1}. ${s}`).join('\n'),
     gates: gateList(v).join('\n'),
     tools: TOOLS.filter(t => state.tools.includes(t.k)).map(t => '- ' + t.text).join('\n'),
+    title: state.ver > 1 ? `${v.task} (v${state.ver})` : v.task,
+    log: state.log.slice(-5).reverse().flatMap(l => l.items.map(t => `- v${l.ver} (${l.date}): ${t}`)).join('\n'),
+    about: [`- 할 일: ${v.task}`, lines(fs.filter(f => f.fixed))].filter(Boolean).join('\n'),
   };
   const label = k => fs.find(f => f.k === k)?.label || k;
   const list = TEMPLATES.shortLines[group()].map(t => `- “${fill(t, v, k => `[${label(k)}]`)}”`).join('\n');
   return [fillDoc(TEMPLATES.run, d), fillDoc(TEMPLATES.harness, d),
-          fillDoc(TEMPLATES.short, {...d, list, hint: list.includes('[') ? TEMPLATES.shortHint : ''})];
+          fillDoc(TEMPLATES.short, {...d, list, hint: list.includes('[') ? TEMPLATES.shortHint : ''}),
+          fillDoc(TEMPLATES.review, d)];
+}
+const fileName = i => i === 1 && state.ver > 1 ? RESULT_TABS[1].file.replace('.md', `_v${state.ver}.md`) : RESULT_TABS[i].file;
+const fixSuggest = (k, v) => { const f = FIX_SUGGEST[k]; return f && (fill(f.text, v) ?? f.fallback); };
+
+// 고친 점을 규칙에 넣고 버전을 올림
+function applyFixes(items){
+  items = items.map(t => t.trim()).filter(Boolean);
+  if (!items.length) return;
+  const ver = state.ver + 1, now = new Date();
+  for (const t of items) if (!state.skills.includes(t)) { state.skills.push(t); state.fixedAt[t] = ver; }
+  state.log.push({ver, date:`${now.getMonth() + 1}/${now.getDate()}`, items});
+  state.ver = ver; state.check = {}; state.fixes = [];
 }
 
 /* ---------- 화면 ---------- */
@@ -444,7 +519,7 @@ const VIEWS = [
       : `<p class="muted">${state.type === 'custom' ? '직접 입력한 업무는 추천 규칙이 없어요. 아래에 직접 적어 주세요.' : 'STEP 0에서 업무 유형을 고르면 추천 규칙이 보여요.'}</p>`}
     <h3>내 규칙 (${n}개)</h3>
     ${n ? `<ol class="rules">${state.skills.map((t, i) => `<li><span class="num" aria-hidden="true">${i + 1}.</span>
-        <label class="sr" for="s-${i}">규칙 ${i + 1}</label><input id="s-${i}" data-skill="${i}" value="${esc(t)}">
+        <label class="sr" for="s-${i}">규칙 ${i + 1}</label><input id="s-${i}" data-skill="${i}" value="${esc(t)}">${state.fixedAt[t] ? `<span class="badge">v${state.fixedAt[t]}에서 추가</span>` : ''}
         <button id="up-${i}" data-act="up" data-i="${i}" aria-label="규칙 ${i + 1} 위로" ${i === 0 ? 'disabled' : ''}>↑</button>
         <button id="down-${i}" data-act="down" data-i="${i}" aria-label="규칙 ${i + 1} 아래로" ${i === n - 1 ? 'disabled' : ''}>↓</button>
         <button data-act="del" data-i="${i}" aria-label="규칙 ${i + 1} 삭제">삭제</button></li>`).join('')}</ol>` : ''}
@@ -474,7 +549,7 @@ const VIEWS = [
     <div class="tabs" role="tablist" aria-label="결과물">${RESULT_TABS.map((r, i) =>
       `<button role="tab" id="tab-${i}" data-act="tab" data-i="${i}" aria-selected="${i === state.tab}" aria-controls="panel">${r.name}</button>`).join('')}</div>
     <div id="panel" role="tabpanel" aria-labelledby="tab-${state.tab}">
-      <p class="muted">${t.help}</p>
+      <p class="muted">${t.help}</p>${state.tab === 3 && !gateList(vars()).length ? `<p class="privacy">${NOTICES.reviewNoGate}</p>` : ''}
       <div class="actions"><button class="primary" data-act="copy">복사하기</button><button data-act="dl">.md로 내려받기</button><button data-act="print">인쇄</button></div>
       <pre id="out" class="out">${esc(outputs()[state.tab])}</pre>
     </div>
@@ -486,8 +561,39 @@ const VIEWS = [
       <tr><td>Claude</td><td>프로젝트 지침 또는 Skill</td><td>프로젝트 파일 / Cowork 연결 폴더</td></tr></tbody>
     </table></div>
     <p class="muted small">※ 메뉴 이름은 서비스 업데이트에 따라 달라질 수 있어요.</p>
+    <p class="muted small">${NOTICES.reviewWhere}</p>
     <p class="muted small">${NOTICES.publicPc}</p>`; },
+
+  () => { const v = vars(), gates = QG_DEFAULTS.filter(q => qgOn(q.k, v)), f = state.fixes;
+    const has = t => state.skills.includes(t) || f.includes(t);
+    return `<p class="muted" style="margin-top:0">${NOTICES.fixIntro}</p>
+    ${gates.length ? `<div class="qg">${gates.map(q => { const m = state.check[q.k], sg = fixSuggest(q.k, v); return `<div class="fix-row">
+      <p><b>${q.label}</b> — ${esc((state.qgText[q.k] || '').trim() || qgDefault(q, v))}</p>
+      <fieldset class="marks" style="margin:0"><legend class="sr">${q.label} 점검 결과</legend>
+        ${MARKS.map(x => radio('chk-' + q.k, x.v, x.label, m === x.v)).join('')}</fieldset>
+      ${(m === 'd' || m === 'x') && sg ? `<div class="sugg"><button class="chip" id="fs-${q.k}" data-act="fixchip" data-k="${q.k}" ${has(sg) ? 'disabled' : ''}>${has(sg) ? '✓ 추가됨: ' : '+ 추천 규칙: '}${esc(sg)}</button></div>` : ''}
+      </div>`; }).join('')}</div>`
+      : `<p class="privacy">${NOTICES.fixNoGate}</p><p><button data-go="3">확인 기준 고르러 가기</button></p>`}
+    <h3>고칠 점 (새 규칙)</h3>
+    <p class="muted small" style="margin-top:0">${NOTICES.fixHelp}<br>${NOTICES.fixHelp2}</p>
+    ${f.length ? `<ol class="rules">${f.map((t, i) => `<li><span class="num" aria-hidden="true">${i + 1}.</span><span style="flex:1">${esc(t)}</span>
+      <button data-act="fixdel" data-i="${i}" aria-label="고칠 점 ${i + 1} 삭제">삭제</button></li>`).join('')}</ol>` : ''}
+    <div class="add"><label class="sr" for="newFix">고칠 점</label>
+      <input id="newFix" placeholder="예) 어려운 용어는 괄호로 풀이한다"><button data-act="fixadd">추가</button></div>
+    <div class="actions"><button class="primary" id="apply" data-act="apply" ${f.length ? '' : 'disabled'}>규칙에 넣고 v${state.ver + 1} 만들기</button>
+      <button data-act="sheet">점검표 인쇄</button></div>
+    ${state.log.length ? `<div class="actions"><button data-act="totab" data-i="1">완성으로 가서 다시 복사</button><button data-act="totab" data-i="3">④ 검토용 프롬프트 보기</button></div>
+    <h3>고친 기록 (지금 v${state.ver})</h3>
+    <ul class="log">${state.log.slice().reverse().map(l => l.items.map(t => `<li>v${l.ver} · ${l.date} — ${esc(t)}</li>`).join('')).join('')}</ul>` : ''}`; },
 ];
+
+function sheetHtml(){
+  const v = vars(), gates = QG_DEFAULTS.filter(q => qgOn(q.k, v));
+  return `<h2>결과 점검표 — ${esc(v.task)}${state.ver > 1 ? ' (v' + state.ver + ')' : ''}</h2>
+    <table><thead><tr><th>기준</th><th>어떻게 확인할지</th><th>결과</th><th>고칠 점</th></tr></thead><tbody>
+    ${gates.map(q => `<tr><td>${q.label}</td><td>${esc((state.qgText[q.k] || '').trim() || qgDefault(q, v))}</td><td class="box">□ ○ &nbsp;□ △ &nbsp;□ ✕</td><td style="width:30%"></td></tr>`).join('')}
+    </tbody></table><p>고칠 점은 ‘~한다’ 꼴의 규칙 한 줄로 적어 하네스 빌더 STEP 6에 넣으세요.</p>`;
+}
 
 function render(focusId){
   focusId ??= document.activeElement?.id;
@@ -495,11 +601,11 @@ function render(focusId){
   $('#steps').innerHTML = STEPS.map((x, i) => `<li><button id="nav-${i}" data-go="${i}" ${i === s ? 'aria-current="step"' : ''}>${i < s ? '✓ ' : ''}${x.nav}</button></li>`).join('');
   $('#card').innerHTML = (showResume ? `<div class="banner" role="region" aria-label="이전 입력 안내"><p>${NOTICES.resume}</p><div>
     <button data-act="keep">${NOTICES.resumeKeep}</button><button class="primary" data-act="new">${NOTICES.resumeNew}</button></div></div>` : '') + head(s) + VIEWS[s]();
-  $('#layout').classList.toggle('full', s === 5);
-  $('#preview').hidden = s === 5;
+  $('#layout').classList.toggle('full', s >= 5);
+  $('#preview').hidden = s >= 5;
   $('#prev').disabled = s === 0;
-  $('#next').disabled = s === 5;
-  $('#next').textContent = s === 4 ? '완성 보기' : '다음';
+  $('#next').hidden = s === 6;
+  $('#next').textContent = s === 4 ? '완성 보기' : s === 5 ? '돌려 보고 고치기' : '다음';
   live();
   if (focusId) document.getElementById(focusId)?.focus({preventScroll:true});
 }
@@ -523,7 +629,7 @@ function live(){
 }
 
 function go(step, focusId){
-  state.step = Math.max(0, Math.min(5, step));
+  state.step = Math.max(0, Math.min(STEPS.length - 1, step));
   save(); render(focusId || null); window.scrollTo(0, 0);
 }
 
@@ -566,6 +672,7 @@ card.addEventListener('change', e => {
   else if (t.name === 'group') state.group = t.value;
   else if (t.dataset.act === 'qg') state.qgOn[k] = t.checked;
   else if (t.dataset.act === 'auto') state.autoOff = t.checked ? state.autoOff.filter(x => x !== k) : [...state.autoOff, k];
+  else if (t.name?.startsWith('chk-')) state.check[t.name.slice(4)] = t.value;
   else if (t.dataset.act === 'tool') state.tools = t.checked ? [...state.tools, k] : state.tools.filter(x => x !== k);
   else return;
   save(); render(t.id);
@@ -576,8 +683,14 @@ function addSkill(){
   if (t) state.skills.push(t);
   save(); render('newSkill');
 }
+function addFix(){
+  const t = $('#newFix').value.trim();
+  if (t && !state.fixes.includes(t)) state.fixes.push(t);
+  save(); render('newFix');
+}
 card.addEventListener('keydown', e => {
   if (e.target.id === 'newSkill' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addSkill(); }
+  if (e.target.id === 'newFix' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addFix(); }
 });
 
 card.addEventListener('click', e => {
@@ -592,10 +705,16 @@ card.addEventListener('click', e => {
     case 'add':  return addSkill();
     case 'tab':  state.tab = i; focus = 'tab-' + i; break;
     case 'copy': return copy(out());
-    case 'dl':   return download(out(), RESULT_TABS[state.tab].file);
+    case 'dl':   return download(out(), fileName(state.tab));
     case 'print': return window.print();
     case 'keep': showResume = false; focus = 'nav-' + state.step; break;
     case 'new':  return resetAll();
+    case 'fixchip': { const t = fixSuggest(b.dataset.k, vars()); if (t && !state.fixes.includes(t)) state.fixes.push(t); focus = 'newFix'; break; }
+    case 'fixadd': return addFix();
+    case 'fixdel': state.fixes.splice(i, 1); focus = 'newFix'; break;
+    case 'apply':  applyFixes(state.fixes); toast(NOTICES.fixDone.replace('{ver}', state.ver)); focus = 'nav-6'; break;
+    case 'totab':  state.tab = i; return go(5, 'tab-' + i);
+    case 'sheet':  $('#sheet').innerHTML = sheetHtml(); document.body.classList.add('print-sheet'); window.print(); document.body.classList.remove('print-sheet'); return;
   }
   save(); render(focus);
 });
@@ -638,6 +757,22 @@ if (location.hash === '#selftest') {
   if (outputs()[0].includes('오개념이 생기지 않도록')) throw new Error('오개념을 지워도 규칙이 남음');
   state = blank();
   if (/:\s*$|[{}]|undefined/m.test(outputs().join('\n'))) throw new Error('빈 상태 결과에 빈 항목');
+  if (/고친 기록|\(v\d+\)/.test(outputs()[1])) throw new Error('빈 상태에 고친 기록');
+  // 고치기: 규칙 추가 → ①②에 반영, 버전업 → 제목과 고친 기록
+  state = {...blank(), ...JSON.parse(JSON.stringify(EXAMPLES.lesson))};
+  const o4 = outputs()[3];
+  for (const g of gateList(vars())) if (!o4.includes(g)) throw new Error('④에 기준 빠짐: ' + g);
+  if (!o4.includes('- 할 일: 매주 만드는')) throw new Error('④에 할 일 없음');
+  eq(fixSuggest('misc', vars()), '‘맨틀 = 액체’와 바른 개념을 나란히 비교하는 문장이나 문항을 넣는다');
+  applyFixes(['어려운 용어는 괄호로 풀이한다']);
+  const [o1, o2] = outputs();
+  if (!o1.includes('어려운 용어는 괄호로 풀이한다')) throw new Error('고친 규칙이 ①에 없음');
+  if (!o2.includes('(v2)') || !o2.includes('## 고친 기록') || !o2.includes('- v2 (')) throw new Error('② 버전·고친 기록 없음');
+  if (o1.includes('## 고친 기록')) throw new Error('①에 고친 기록이 들어감');
+  eq(fileName(1), '2_하네스지침_v2.md');
+  for (const o of outputs()) if (/:\s*$|[{}]|undefined|null/m.test(o)) throw new Error('고친 뒤 빈 항목: ' + o);
+  state = {...blank(), type:'sheet'};  // 기준이 있어도 고정 상황이 없으면 ④에 할 일 줄은 남음
+  if (!outputs()[3].includes('- 할 일: 학습지')) throw new Error('고정 상황 없을 때 ④ 할 일 빠짐');
   state = saved;
   console.log('SELFTEST OK');
 }
