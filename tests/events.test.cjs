@@ -65,6 +65,31 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  run("resultMode='reuse';state.tab=1");assert.ok(run('VIEWS[5]()').includes('반복할 작업의 규칙 저장'));assert.ok(run('VIEWS[5]()').includes('직접 저장하는 규칙'));
  run("resultMode='run';state.tab=0");
  console.log('DROPDOWNS OK · values, custom fallback, skip, persistence, material isolation, 9 types, handoff wording');
+ // Each middle-school subject has its own activity examples; no activity is silently replaced.
+ for(const subject of run('SCHOOL_SUBJECTS')){
+  for(const type of ['webapp','ppt','sheet','exam','explain','visual','custom']){
+   run(`openMaterial('${type}');state.ctx.subject=${JSON.stringify(subject)}`);
+   const optionCount=3+run('UI.activityChoices[state.type].length');assert.equal(run('activityOptions().length'),optionCount);assert.equal(run('new Set(activityOptions()).size'),optionCount);
+   assert.equal(run('activityOptions()[0]'),run(`UI.subjectActivities[state.ctx.subject].${type==='webapp'?'webapp':'lesson'}[0]`));
+  }
+ }
+ event('change',{name:'type',value:'webapp'});event('change',{id:'subjectSelect',value:'과학'});
+ const scienceActivity=run('activityOptions()[0]');event('change',{id:'activity',dataset:{choiceMeta:'activity'},value:scienceActivity});
+ event('change',{id:'subjectSelect',value:'국어'});assert.equal(run('state.activity'),scienceActivity);
+ assert.ok(run('activityView()').includes('value="__custom" selected'));assert.ok(run('activityOptions()[0]').includes('문단'));
+ event('change',{id:'subjectSelect',value:'__custom'});event('input',{id:'customSubject',dataset:{ctx:'subject'},value:'보건'});
+ assert.deepEqual(Array.from(run('activityOptions()')),Array.from(run('UI.activityChoices.webapp')));
+ event('change',{name:'type',value:'notice'});assert.deepEqual(Array.from(run('activityOptions()')),Array.from(run('UI.activityChoices.notice')));
+ // The prominent custom-method form adds, edits and removes a real rule with the chosen scope.
+ run("state.step=2");const methodsView=run('VIEWS[2]()');
+ assert.equal((methodsView.match(/id="newSkill"/g)||[]).length,1);assert.ok(methodsView.indexOf('원하는 방법 직접 추가하기')<methodsView.indexOf('고른 방법의 문장·순서 바꾸기'));
+ node('newSkill').value='질문 뒤에 생각할 시간을 안내한다';node('newScope').value='request';await act('add');
+ const addedIndex=run('state.skills.length-1');assert.equal(run(`scopeAt(${addedIndex})`),'request');
+ assert.ok(run('composition().text').includes('질문 뒤에 생각할 시간을 안내한다'));assert.ok(!run('outputs()[1]').includes('질문 뒤에 생각할 시간을 안내한다'));
+ event('input',{dataset:{skill:String(addedIndex)},value:'질문 뒤에 10초 생각할 시간을 안내한다'});
+ assert.ok(run('composition().text').includes('10초 생각할 시간'));await act('del',{i:String(addedIndex)});
+ assert.ok(!run('composition().text').includes('10초 생각할 시간'));
+ console.log('SUBJECT ACTIVITIES / METHODS OK · 12 subjects × 7 lesson types, web interactions, preserved activity, fallback, custom method add/edit/remove/scope');
  // Curriculum controls use the same delegated event path as the visible UI.
  event('change',{name:'type',value:'sheet'});
  event('change',{id:'subjectSelect',value:'과학'});event('change',{id:'curriculumVersion',value:'2022'});

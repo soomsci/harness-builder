@@ -62,7 +62,7 @@ details{border-top:1px solid var(--line);margin-top:20px}summary{padding:16px 0;
 const STEPS = [
   {nav:'업무', title:'어떤 일을 도와드릴까요?', easy:'만들고 싶은 자료를 고르세요. 짧게 적어도 괜찮아요.', like:'여기서는 AI에게 줄 요청문을 만들어요. 완성한 요청문을 AI 채팅창에 붙여 넣으면 됩니다.'},
   {nav:'상황', title:'이번에 필요한 내용을 알려 주세요', easy:'목록에서 고르고, 수업 주제만 짧게 적어 주세요. 모르는 항목은 건너뛰어도 돼요.', like:'상황(Context)은 대신 일을 맡을 선생님께 남기는 메모예요. 기본 정보와 이번 요청의 정보를 구분해 저장합니다.'},
-  {nav:'방법', title:'어떤 방식으로 만들까요?', easy:'추천 방법을 골라 두었어요. 필요한 것만 바꿔 주세요.', like:'방법(Skill)은 일을 처리하는 순서와 원칙이에요. 다음에도 쓸 방법과 이번에만 적용할 방법을 나눌 수 있어요.'},
+  {nav:'방법', title:'어떤 방식으로 만들까요?', easy:'추천 방법을 고르거나, 원하는 방법을 직접 추가하세요.', like:'방법(Skill)은 일을 처리하는 순서와 원칙이에요. 다음에도 쓸 방법과 이번에만 적용할 방법을 나눌 수 있어요.'},
   {nav:'확인', title:'이 기준으로 확인할게요', easy:'업무에 맞는 기준을 골라 두었어요. 필요한 것만 바꿔 주세요.', like:'AI가 먼저 점검하고, 선생님이 최종 확인해요. 자료를 보지 못했거나 확인할 수 없는 항목은 통과로 표시하지 않도록 요청합니다.'},
   {nav:'도구', title:'AI가 쓸 도구 (Tool) — 필요한 것만', easy:'AI가 쓸 수 있는 기능을 알려 줘요. 필요한 것만 체크하세요.', like:'요리사에게 오븐과 믹서기를 써도 된다고 알려 주는 것과 같아요.'},
   {nav:'AI에 붙여넣기', title:'요청문을 복사해 AI 채팅에 붙여 넣으세요', easy:'아래 요청문을 복사해서 사용 중인 AI 채팅창에 붙여 넣으세요.', like:'처음이라면 ‘이번 자료 만들기’를 쓰세요. 같은 방법을 반복해서 쓰고 싶을 때만 ‘반복할 작업의 규칙 저장’을 이용하세요.'},
@@ -308,6 +308,20 @@ const UI = {
     notice:['목적 → 일정 → 준비물 → 문의 안내','안내 사항 → 신청 방법 → 제출 기한'],
     doc:['목적 → 세부 계획 → 역할 → 일정','활동 개요 → 결과 → 개선점'],
     custom:['도입 → 핵심 내용 → 정리','문제 → 해결 방법 → 확인']
+  },
+  subjectActivities:{
+    "국어":{lesson:["글 읽기 → 핵심 내용 요약 → 근거 나누기", "작품 감상 → 인물의 관점 비교 → 생각 쓰기", "주장 정하기 → 근거 찾기 → 토론하기"],webapp:["문단 순서 바꾸기 → 글의 흐름 확인", "문장 표현 고르기 → 전달 효과 비교", "인물의 말 선택 → 관점 비교"]},
+    "수학":{lesson:["문제 상황 이해 → 풀이 방법 비교 → 설명하기", "규칙 찾기 → 식으로 표현 → 다른 경우 확인", "자료 정리 → 그래프 그리기 → 해석하기"],webapp:["값 바꾸기 → 그래프 변화 관찰", "도형 조작 → 성질 찾기", "풀이 단계 선택 → 해설 확인"]},
+    "과학":{lesson:["예상하기 → 실험·관찰 → 근거로 설명하기", "자료·그래프 해석 → 규칙 찾기 → 결론 쓰기", "모형 만들기 → 현상 설명 → 한계 찾기"],webapp:["조건 바꾸기 → 모의실험 결과 비교", "값 바꾸기 → 그래프 변화 해석", "관찰 자료 분류 → 분류 근거 확인"]},
+    "사회":{lesson:["지도·통계 읽기 → 지역 비교 → 특징 설명", "사회 문제 조사 → 대안 비교 → 해결 방안 제안", "서로 다른 입장 비교 → 토의 → 의견 정리"],webapp:["지역 선택 → 통계·지도 비교", "정책 대안 선택 → 예상 영향 비교", "자료 분류 → 사회 현상 해석"]},
+    "역사":{lesson:["사료 읽기 → 당시 상황 추론 → 근거 설명", "사건 순서 정리 → 원인과 결과 연결", "서로 다른 기록 비교 → 관점 차이 토론"],webapp:["사건 카드 배열 → 연표 확인", "사료 선택 → 공통점·차이점 비교", "지도에서 지역 선택 → 시대별 변화 비교"]},
+    "영어":{lesson:["대화 읽기 → 역할 나누기 → 표현 바꾸어 말하기", "짧은 글 읽기 → 핵심 정보 찾기 → 요약하기", "상황 정하기 → 문장 쓰기 → 서로 고쳐 주기"],webapp:["단어·문장 연결 → 뜻 확인", "대화 응답 선택 → 상황에 맞는 표현 확인", "문장 순서 맞추기 → 글의 흐름 확인"]},
+    "도덕":{lesson:["도덕적 갈등 읽기 → 가치 비교 → 판단 근거 설명", "다른 사람의 입장 살피기 → 대화 → 실천 방안 정하기", "생활 사례 찾기 → 문제 성찰 → 실천 계획 쓰기"],webapp:["상황별 선택 → 판단 이유 비교", "가치 카드 분류 → 우선순위 설명", "관점 선택 → 서로 다른 입장 비교"]},
+    "기술·가정":{lesson:["생활 문제 찾기 → 해결안 설계 → 개선하기", "생활 자원 비교 → 선택 기준 정하기 → 계획 세우기", "안전 사례 분석 → 위험 찾기 → 예방 방법 정리"],webapp:["조건·예산 바꾸기 → 생활 계획 비교", "설계 요소 선택 → 해결안 구성", "안전 상황 판단 → 대처 방법 확인"]},
+    "정보":{lesson:["문제 나누기 → 알고리즘 작성 → 결과 확인", "데이터 정리 → 시각화 → 의미 해석", "디지털 생활 사례 분석 → 책임 있는 행동 토의"],webapp:["명령 순서 배열 → 실행 과정 확인", "입력값 바꾸기 → 알고리즘 결과 추적", "데이터 선택 → 그래프 비교"]},
+    "음악":{lesson:["음악 듣기 → 요소 찾기 → 느낌과 근거 나누기", "리듬 만들기 → 연주하기 → 서로 감상하기", "노래·연주 연습 → 표현 비교 → 개선하기"],webapp:["리듬 패턴 선택 → 재생·비교", "박자·빠르기 바꾸기 → 리듬 변화 듣기", "음악 요소 연결 → 개념 확인"]},
+    "미술":{lesson:["작품 관찰 → 표현 방법 찾기 → 감상 나누기", "주제 정하기 → 구상하기 → 표현·감상하기", "시각 자료 비교 → 전달 의미 해석 → 재구성하기"],webapp:["색·형태 바꾸기 → 조형 효과 비교", "구도 요소 배치 → 표현 의도 설명", "작품 특징 분류 → 감상 관점 비교"]},
+    "체육":{lesson:["움직임 연습 → 수행 돌아보기 → 개선하기", "경기 상황 분석 → 전략 토의 → 적용하기", "운동 목표 정하기 → 활동 기록 → 변화 성찰"],webapp:["경기 상황 선택 → 전략 비교", "활동 기록 입력 → 변화 그래프 확인", "안전 상황 판단 → 대처 방법 확인"]},
   },
   studentFields:['known','misc','cls'],
   next:['상황 알려주기','만드는 방법 고르기','확인 기준 보기','요청문 만들기'],
@@ -788,10 +802,20 @@ function field(f){
  return `<div class="field ${multiline?'wide':''}"><label for="f-${f.k}">${f.label} <span class="scope">${['out','form'].includes(f.k)?'이 자료만':isFixed(f)?'유지할 정보':'이번 수업·업무'}</span></label>${control}</div>`;
 }
 function toolView(){return `<p class="muted">AI에서 실제로 사용할 수 있는 기능만 선택해 주세요. 이곳에서 파일을 첨부하거나 도구를 연결하지는 않아요.</p>${TOOLS.map(t=>`<label class="check"><input type="checkbox" id="tool-${t.k}" data-act="tool" data-k="${t.k}" ${state.tools.includes(t.k)?'checked':''}><span>${t.label}</span></label>`).join('')}`;}
-function ruleEditor(){syncRules(state);return `<ol class="rules">${state.skills.map((t,i)=>`<li class="rule"><label for="s-${i}">방법 ${i+1}</label><textarea rows="2" id="s-${i}" data-skill="${i}">${esc(t)}</textarea><div class="rule-controls"><label class="sr" for="scope-${i}">방법 ${i+1} 적용 범위</label><select id="scope-${i}" data-scope="${i}">${scopeOptions(scopeAt(i))}</select><button data-act="up" data-i="${i}" aria-label="방법 ${i+1} 위로" ${i===0?'disabled':''}>↑</button><button data-act="down" data-i="${i}" aria-label="방법 ${i+1} 아래로" ${i===state.skills.length-1?'disabled':''}>↓</button><button data-act="del" data-i="${i}" aria-label="방법 ${i+1} 삭제">삭제</button></div></li>`).join('')}</ol><div class="field"><label for="newSkill">내 방법 추가</label><textarea id="newSkill" rows="2" placeholder="예: 정답과 해설은 학생용 자료와 분리한다"></textarea></div><div class="rule-controls"><label class="sr" for="newScope">새 방법 적용 범위</label><select id="newScope">${scopeOptions('always')}</select><button data-act="add">추가</button></div><p class="hint">비슷한 방법은 하나로 합쳐 주세요. 분량이나 순서가 서로 충돌하지 않는지도 살펴보세요.</p>`;}
+function ruleEditor(){syncRules(state);return `<ol class="rules">${state.skills.map((t,i)=>`<li class="rule"><label for="s-${i}">방법 ${i+1}</label><textarea rows="2" id="s-${i}" data-skill="${i}">${esc(t)}</textarea><div class="rule-controls"><label class="sr" for="scope-${i}">방법 ${i+1} 적용 범위</label><select id="scope-${i}" data-scope="${i}">${scopeOptions(scopeAt(i))}</select><button data-act="up" data-i="${i}" aria-label="방법 ${i+1} 위로" ${i===0?'disabled':''}>↑</button><button data-act="down" data-i="${i}" aria-label="방법 ${i+1} 아래로" ${i===state.skills.length-1?'disabled':''}>↓</button><button data-act="del" data-i="${i}" aria-label="방법 ${i+1} 삭제">삭제</button></div></li>`).join('')}</ol><p class="hint">비슷한 방법은 하나로 합쳐 주세요. 분량이나 순서가 서로 충돌하지 않는지도 살펴보세요.</p>`;}
+function methodComposer(){return detail('add-method','원하는 방법 직접 추가하기',`<p class="hint">목록에 없어도 괜찮아요. 원하는 방식을 한 가지씩 적어 추가하세요.</p><div class="field"><label for="newSkill">AI가 어떻게 만들어 주면 좋을까요?</label><textarea id="newSkill" rows="2" placeholder="예: 정답과 해설은 학생용 자료와 분리한다"></textarea></div><div class="rule-controls"><label class="sr" for="newScope">새 방법 적용 범위</label><select id="newScope">${scopeOptions('always')}</select><button data-act="add">내 방법 추가</button></div>`);}
+function activityOptions(){
+ const common=UI.activityChoices[state.type]||UI.activityChoices.custom;
+ const subject=group()==='lesson'?UI.subjectActivities[state.ctx.subject]:null;
+ if(!subject)return common;
+ const activities=state.type==='webapp'?subject.webapp:subject.lesson;
+ return [...new Set([...activities,...common])];
+}
 function activityView(){
- const label=state.type==='webapp'?'학생이 해 볼 활동':['notice','doc'].includes(state.type)?'내용을 담는 순서':'활동·수업 흐름';
- return `<div class="field"><label for="activity">${label} <span class="scope">선택</span></label>${choiceInput('activity','meta','activity',state.activity||'',UI.activityChoices[state.type]||UI.activityChoices.custom,'도입 질문 → 핵심 내용 → 확인 활동')}</div>`;
+ const label=state.type==='webapp'?'학생이 해 볼 활동':state.type==='exam'?'평가할 활동·문항 구성':['notice','doc'].includes(state.type)?'내용을 담는 순서':'활동·수업 흐름';
+ const options=activityOptions(),subject=group()==='lesson'&&UI.subjectActivities[state.ctx.subject];
+ const hint=state.activity&&!options.includes(state.activity)?'직접 적었거나 이전에 고른 활동을 유지했어요. 이번 과목·자료에 맞게 확인해 주세요.':subject?`${state.ctx.subject} 활동 예시부터 보여 드려요. 수업 목표에 맞게 골라 주세요.`:'과목을 고르면 과목별 활동 예시도 보여 드려요.';
+ return `<div class="field" id="activity-field"><label for="activity">${label} <span class="scope">선택</span></label>${choiceInput('activity','meta','activity',state.activity||'',options,options[0])}${group()==='lesson'?`<p class="hint">${esc(hint)}</p>`:''}</div>`;
 }
 function referenceView(){const r=state.reference||{};return detail('reference','교과서·참고 내용 추가 · 선택',`<p class="hint">필요한 부분 1개만 넣어 주세요. 입력은 이 수업의 자료에서 함께 사용해요. 학생 개인정보는 넣지 마세요.</p><div class="field"><label for="refSource">출처·쪽수</label><input id="refSource" data-reference="source" value="${esc(r.source||'')}" placeholder="예: 과학 교과서 52쪽"></div><div class="field"><label for="refText">참고할 본문 발췌</label><textarea id="refText" data-reference="text" rows="4">${esc(r.text||'')}</textarea><p id="refLimit" class="hint">${(r.text||'').length} / ${MAX_REFERENCE}자 · 초과하면 줄인 뒤 전달할 수 있어요. 이름만 적으면 AI에 별도로 첨부해야 해요.</p></div>`);}
 function lessonLabel(l){return l.ctx.cur||l.ctx.purpose||l.ctx.goal||'제목 없는 수업·업무';}
@@ -845,7 +869,7 @@ const VIEWS=[
 },
 ()=>{
   const v=vars(),chips=preset()?.skills||[],autos=autoSkills(v);
-  return `${chips.length?`<div class="choices">${chips.map((t,i)=>`<label class="check"><input type="checkbox" id="chip-${i}" data-chip="${i}" ${state.skills.includes(t)?'checked':''}><span>${esc(t)}</span></label>`).join('')}</div>`:'<p class="muted">직접 정한 방법이 있다면 아래에 적어 주세요.</p>'}<p id="rule-count" class="hint">${state.skills.length?'고른 방법 '+state.skills.length+'개':'아직 고르지 않아도 괜찮아요.'}</p>${detail('my-rules','직접 적거나 고른 방법 다듬기',ruleEditor())}${detail('auto-rules',`상황에서 만든 방법 확인 · ${autos.filter(a=>!state.autoOff.includes(a.id)).length}개`,`${autos.length?'<p class="muted">입력한 상황을 반영했어요. 기본 설정에는 다음 요청에도 쓸 수 있는 일반적인 표현으로 바뀝니다.</p>':'<p class="muted">학년·학급 특성 등을 적으면 자동으로 생겨요.</p>'}<div class="auto">${autos.map(a=>`<label class="check"><input type="checkbox" id="auto-${a.id}" data-act="auto" data-k="${a.id}" ${state.autoOff.includes(a.id)?'':'checked'}><span>${esc(a.text)}</span></label>`).join('')}</div>`)}`;
+  return `${chips.length?`<div class="choices">${chips.map((t,i)=>`<label class="check"><input type="checkbox" id="chip-${i}" data-chip="${i}" ${state.skills.includes(t)?'checked':''}><span>${esc(t)}</span></label>`).join('')}</div>`:'<p class="muted">아래 ‘원하는 방법 직접 추가하기’에서 나만의 방법을 넣어 보세요.</p>'}<p id="rule-count" class="hint">${state.skills.length?'고른 방법 '+state.skills.length+'개':'아직 고르지 않아도 괜찮아요.'}</p>${methodComposer()}${detail('my-rules','고른 방법의 문장·순서 바꾸기',ruleEditor())}${detail('auto-rules',`상황에서 만든 방법 확인 · ${autos.filter(a=>!state.autoOff.includes(a.id)).length}개`,`${autos.length?'<p class="muted">입력한 상황을 반영했어요. 기본 설정에는 다음 요청에도 쓸 수 있는 일반적인 표현으로 바뀝니다.</p>':'<p class="muted">학년·학급 특성 등을 적으면 자동으로 생겨요.</p>'}<div class="auto">${autos.map(a=>`<label class="check"><input type="checkbox" id="auto-${a.id}" data-act="auto" data-k="${a.id}" ${state.autoOff.includes(a.id)?'':'checked'}><span>${esc(a.text)}</span></label>`).join('')}</div>`)}`;
 },
 ()=>{
  const v=vars();
@@ -970,7 +994,7 @@ card.addEventListener('input',e=>{
  else if('task'in d)state.task=t.value;
  else if('skill'in d)renameRule(+d.skill,t.value);
  else if(d.qgtext)state.qgText[d.qgtext]=t.value;
- else return;if('skill'in d)rememberMethods();save();live();
+ else return;if('skill'in d)rememberMethods();save();if(d.ctx==='subject'&&$('#activity-field'))$('#activity-field').outerHTML=activityView();live();
 });
 card.addEventListener('change',e=>{
  const t=e.target,d=t.dataset,k=d.k;dismissResume();
