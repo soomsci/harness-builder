@@ -91,3 +91,18 @@ e.run(source.slice(source.indexOf('/* ---------- 화면 ---------- */'),source.i
 assert.ok(e.run('VIEWS[6]()').includes('data-act="recheck"'));
 assert.ok(e.run('VIEWS[6]()').includes('현재 조건으로 다시 점검'));
 console.log('REVIEW FOLLOW-UP OK · reachable recheck control, temporary result isolation');
+// Textbook handoff is an external attachment, never a claim of an uploaded/read file.
+e=boot();e.run("openMaterial('sheet');state.ctx.subject='과학';state.ctx.curriculumVersion='2022';addStandard('9과02-01')");
+const pinned=e.run('curriculumText()');e.run("CURRICULUM_DATA.find(r=>r[0]==='2022'&&r[1]==='과학'&&r[2]==='9과02-01')[3]='갱신된 본문'");
+assert.equal(e.run('curriculumText()'),pinned);e.run('save()');restored=boot([...e.values]);assert.equal(restored.run('curriculumText()'),pinned);
+assert.ok(e.run('composition().text').includes('이 요청문만으로 파일이 전달된 것은 아닙니다'));
+assert.ok(e.run('composition().text').includes('문항과 정답을 대조'));
+e.run("state.ctx.textbookMode='none';state.reference={text:'',source:''}");assert.equal(e.run('referenceText()'),'');
+e.run("state.reference.source='교과서 52~55쪽';state.ctx.textbookMode='attach'");assert.ok(e.run('referenceText()').includes('52~55쪽'));
+assert.ok(!e.run('outputs()[4]').includes('52~55쪽'));assert.ok(e.run('outputs()[4]').includes('작업 절차와 확인 한계'));
+e.run("state.resultName='학습지.pdf';registerResult();state.check.fact='o';ensureCheckRecord();state.checkRecord.evidence.fact='교과서 53쪽 대조';save()");
+restored=boot([...e.values]);assert.equal(restored.run('state.resultRecord.version'),1);assert.equal(restored.run('state.checkRecord.evidence.fact'),'교과서 53쪽 대조');
+restored.run('registerResult()');assert.equal(restored.run('state.resultRecord.version'),2);assert.equal(restored.run('state.checkHistory[0].evidence.fact'),'교과서 53쪽 대조');assert.equal(restored.run('Object.keys(state.check).length'),0);
+assert.ok(restored.run("composition('resume').text").includes('2차 결과'));assert.ok(!restored.run("composition('resume').text").includes('교과서 53쪽 대조'));
+restored.run("state.check.fact='o';ensureCheckRecord()");assert.ok(!restored.run('workflowText()').includes('점검이 끝났어요'));
+console.log('TEACHER WORKFLOW OK · frozen curriculum, external textbook handoff, opt-out, reusable scope, result/evidence restore, new revision clears marks, no false completion');

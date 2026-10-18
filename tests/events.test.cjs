@@ -14,11 +14,25 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  assert.equal(run('state.ctx.purpose'),'체험 안내');assert.equal(run('workspace.lessons.length'),2);
  event('change',{name:'type',value:'sheet'});assert.equal(run('state.materialId'),sheet);assert.equal(run('workspace.lessons.length'),2);
  event('input',{dataset:{ctx:'goal'},value:'이전 목표'});run("recordTransfer('create')");
- event('input',{dataset:{meta:'resultName'},value:'결과1.pdf'});event('change',{name:'chk-fact',value:'o'});node('mark-fact').checked=true;
- event('input',{dataset:{meta:'resultName'},value:'결과2.pdf'});assert.equal(node('mark-fact').checked,false);assert.equal(run('Object.keys(state.check).length'),0);assert.equal(run('state.checkHistory.length'),1);
+ event('input',{dataset:{meta:'resultName'},value:'결과1.pdf'});await act('new-result');event('change',{name:'chk-fact',value:'o'});node('mark-fact').checked=true;
+ event('input',{dataset:{meta:'resultName'},value:'결과2.pdf'});assert.equal(run('state.check.fact'),'o');assert.equal(run('state.resultRecord.version'),1);await act('new-result');assert.equal(run('Object.keys(state.check).length'),0);assert.equal(run('state.checkHistory.length'),1);
  event('input',{dataset:{ctx:'goal'},value:'새 목표'});event('change',{name:'chk-fact',value:'o'});assert.equal(run('Object.keys(state.check).length'),0);
- assert.ok(run("composition('review').text").includes('이전 목표'));assert.ok(run('conditionView()').includes('마지막 제작 요청 이후'));
+ assert.ok(run("composition('review').text").includes('이전 목표'));assert.ok(run('conditionView()').includes('이전 조건에서 확인'));
  await act('recheck');event('change',{name:'chk-fact',value:'o'});assert.equal(run('state.check.fact'),'o');assert.equal(run('staleCheck()'),false);
+ // A result revision owns its evidence; renaming preserves it, content changes require registration.
+ event('input',{dataset:{evidence:'fact'},value:'교과서 53쪽과 문항 2를 대조함'});
+ assert.ok(run("composition('resume').text").includes('교과서 53쪽과 문항 2를 대조함'));
+ event('input',{dataset:{meta:'resultName'},value:'결과_이름수정.pdf'});
+ assert.equal(run('state.check.fact'),'o');assert.equal(run('state.checkRecord.evidence.fact'),'교과서 53쪽과 문항 2를 대조함');
+ event('input',{id:'resultText',value:'새 문항 본문'});assert.equal(run('state.checkRecord'),null);
+ await act('recheck');assert.equal(run('state.checkRecord'),null);
+ await act('new-result');assert.equal(run('state.resultRecord.version'),3);assert.equal(run('transientResult'),'새 문항 본문');
+ assert.equal(run('Object.keys(state.checkRecord.evidence).length'),0);
+ await act('recheck');event('change',{name:'chk-fact',value:'d'});event('input',{dataset:{evidence:'fact'},value:'문항 2의 정답 근거가 없음'});
+ run("state.editProblem=''");await act('revise');assert.ok(run('state.editProblem').includes('문항 2의 정답 근거가 없음'));
+ await act('resume-work');assert.equal(run('state.intent'),'resume');assert.ok(run('selectedOutput()').includes('3차 결과'));
+ run('save()');assert.ok(!values.get('harness-builder-v2').includes('새 문항 본문'));
+ console.log('WORKFLOW OK · explicit result revision, rename, evidence, content invalidation, revision/resume, body not persisted');
  // A short revision must not pretend it resent the full new conditions.
  run("state.intent='revise';state.editProblem='문항 간격 변경';state.tab=0");await act('copy');assert.ok(run('state.lastRequest.blocks[0].text').includes('이전 목표'));assert.equal(run('state.lastTransfer.intent'),'revise');
  // New documents keep the correct group and do not spawn an extra lesson on first selection.
