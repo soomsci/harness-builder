@@ -61,11 +61,11 @@ details{border-top:1px solid var(--line);margin-top:20px}summary{padding:16px 0;
 // 단계 이름, '쉽게 말하면' 설명, 비유
 const STEPS = [
   {nav:'업무', title:'어떤 일을 도와드릴까요?', easy:'만들고 싶은 자료를 고르세요. 짧게 적어도 괜찮아요.', like:'여기서는 AI에게 줄 요청문을 만들어요. 완성한 요청문을 AI 채팅창에 붙여 넣으면 됩니다.'},
-  {nav:'상황', title:'이번에 필요한 내용을 알려 주세요', easy:'수업 대상과 목표부터 알려 주세요. 아직 모르는 칸은 비워도 돼요.', like:'상황(Context)은 대신 일을 맡을 선생님께 남기는 메모예요. 기본 정보와 이번 요청의 정보를 구분해 저장합니다.'},
+  {nav:'상황', title:'이번에 필요한 내용을 알려 주세요', easy:'목록에서 고르고, 수업 주제만 짧게 적어 주세요. 모르는 항목은 건너뛰어도 돼요.', like:'상황(Context)은 대신 일을 맡을 선생님께 남기는 메모예요. 기본 정보와 이번 요청의 정보를 구분해 저장합니다.'},
   {nav:'방법', title:'어떤 방식으로 만들까요?', easy:'추천 방법을 골라 두었어요. 필요한 것만 바꿔 주세요.', like:'방법(Skill)은 일을 처리하는 순서와 원칙이에요. 다음에도 쓸 방법과 이번에만 적용할 방법을 나눌 수 있어요.'},
   {nav:'확인', title:'이 기준으로 확인할게요', easy:'업무에 맞는 기준을 골라 두었어요. 필요한 것만 바꿔 주세요.', like:'AI가 먼저 점검하고, 선생님이 최종 확인해요. 자료를 보지 못했거나 확인할 수 없는 항목은 통과로 표시하지 않도록 요청합니다.'},
   {nav:'도구', title:'AI가 쓸 도구 (Tool) — 필요한 것만', easy:'AI가 쓸 수 있는 기능을 알려 줘요. 필요한 것만 체크하세요.', like:'요리사에게 오븐과 믹서기를 써도 된다고 알려 주는 것과 같아요.'},
-  {nav:'사용하기', title:'이제 AI에게 부탁해 보세요', easy:'아래 요청문을 복사해서 사용 중인 AI 채팅창에 붙여 넣으세요.', like:'자주 반복하는 업무라면 재사용 설정(하네스)을 따로 저장할 수 있어요. 이 앱이 AI를 실행하거나 파일을 전달하지는 않아요.'},
+  {nav:'AI에 붙여넣기', title:'요청문을 복사해 AI 채팅에 붙여 넣으세요', easy:'아래 요청문을 복사해서 사용 중인 AI 채팅창에 붙여 넣으세요.', like:'처음이라면 ‘이번 자료 만들기’를 쓰세요. 같은 방법을 반복해서 쓰고 싶을 때만 ‘반복할 작업의 규칙 저장’을 이용하세요.'},
   {nav:'고치기', title:'결과에서 무엇을 고칠까요?', easy:'고칠 점을 한 줄로 적어 주세요. 기준별 점검도 펼쳐 볼 수 있어요.', like:'이번 결과만 고칠지, 다음에도 적용할지 정해요. 기존 규칙을 바꾸면 비슷한 규칙이 계속 쌓이는 것을 줄일 수 있어요.'},
 ];
 
@@ -83,7 +83,7 @@ const CONTEXT_FIELDS = {
     {k:'grade',   label:'학년', ph:'중학교 1학년', star:1, fixed:true},
     {k:'unit',    label:'단원', ph:'판 구조론', star:0},
     {k:'prev',    label:'이전 차시', ph:'대륙이동설', star:0},
-    {k:'cur',     label:'이번 차시', ph:'해저확장설', star:1},
+    {k:'cur',     label:'수업 주제', ph:'해저확장설', star:1},
     {k:'next',    label:'다음 차시', ph:'판의 경계', star:0},
     {k:'goal',    label:'학습 목표', ph:'해양지각의 나이 분포로 해저확장설의 근거를 설명한다', star:1},
     {k:'known',   label:'학생들이 이미 알고 있는 것', ph:'지각·맨틀 구분까지만 (판은 아직)', star:2},
@@ -260,7 +260,7 @@ const NOTICES = {
 
 const RESULT_TABS = [
   {name:'지금 사용할 요청문', help:'복사한 뒤 AI 채팅창에 붙여 넣으세요. 참고자료는 그 채팅창에 직접 첨부해 주세요.', intro:'아래 요청문을 복사해서 사용 중인 AI 채팅창에 붙여 넣으세요.', file:'1_이번요청.md'},
-  {name:'계속 쓸 기본 설정', help:'사용 중인 AI의 프로젝트·비서 지침에 저장하세요. 기본 설정으로 정한 정보와 다음에도 쓸 방법만 담았어요.', intro:'다음에도 쓸 방법을 AI의 지침에 한 번 저장해요.', file:'2_기본설정.md'},
+  {name:'반복해서 쓸 작성 규칙', help:'지침 입력란을 모르겠다면 ‘이번 자료 만들기’를 이용하세요. 여기서 복사해도 AI 설정이 자동으로 바뀌지는 않아요.', intro:'다음에도 쓸 방법을 AI의 지침에 한 번 저장해요.', file:'2_기본설정.md'},
   {name:'다음 요청 양식', help:'기본 설정을 저장한 AI에서 사용하세요. [대괄호] 부분을 새 내용으로 바꿔 주세요.', intro:'저장한 설정에 이번 요청의 내용만 더해 주세요.', file:'3_다음요청.md'},
   {name:'결과 검토 요청문', help:'새 채팅에 이 요청문과 AI가 만든 결과, 참고자료를 함께 넣으세요. 검토 결과도 선생님이 최종 확인해 주세요.', intro:'새 채팅에서 결과를 다시 살펴보세요.', file:'4_결과검토.md'},
   {name:'고급: 스킬 파일', help:'Agent Skills를 지원하는 도구용이에요. teacher-material 폴더 안에 SKILL.md로 저장하세요. 일반 프로젝트 지침과는 설치 방식이 달라요.', intro:'스킬 기능을 지원하는 도구에서 사용할 파일이에요.', file:'SKILL.md'},
@@ -279,7 +279,36 @@ const UI = {
     custom:'m4 16-1 5 5-1L20 8l-4-4ZM13 7l4 4M4 16l4 4'
   },
   taskPlaceholder:{lesson:'중1 과학 학습지 만들기',doc:'현장체험학습 안내문 만들기'},
-  primaryFields:{lesson:['subject','grade','goal'],doc:['reader','purpose']},
+  primaryFields:{lesson:['subject','grade','cur'],doc:['reader','purpose']},
+  fieldChoices:{
+    grade:['중학교 1학년','중학교 2학년','중학교 3학년','중학교 전 학년'],
+    time:['15분','30분','45분','50분','90분 · 2차시'],
+    known:['처음 배우는 내용','기본 용어는 배운 상태','이전 수업 내용을 복습한 상태'],
+    misc:['낯선 용어를 어려워함','글을 읽고 핵심을 찾기 어려워함','그래프·표 해석을 어려워함','개념을 실제 사례에 적용하기 어려워함'],
+    cls:['학생 간 이해도 차이가 큼','기초 개념 설명이 더 필요함','심화 활동을 원하는 학생이 많음','모둠 활동에 익숙함','개별 활동을 선호함'],
+    reader:['학생','학부모','교직원','학교 관리자','학생과 학부모'],
+    purpose:['행사 일정·준비물 안내','신청·동의 요청','활동 결과 보고','회의·연수 운영','업무 계획 공유'],
+    caution:['확정된 정보만 안내','미정 사항을 별도로 표시','신청 기한·방법을 명확히 안내','개인정보를 포함하지 않기'],
+    form:['A4 1쪽','A4 2쪽','학교 양식에 맞추기','표 중심으로 간단히 정리']
+  },
+  outputChoices:{
+    webapp:['HTML 파일 1개','HTML 파일 1개 · 휴대폰에서도 사용'],
+    ppt:['슬라이드 5장','슬라이드 10장','슬라이드 15장','슬라이드 20장'],
+    sheet:['A4 1쪽 · 정답·해설 별도','A4 2쪽 · 정답·해설 별도'],
+    exam:['5문항 · 정답·해설 별도','10문항 · 정답·해설 별도','20문항 · 정답·해설 별도'],
+    explain:['A4 1쪽','A4 2쪽'],visual:['그림 1개','비교표 1개','인포그래픽 1장'],custom:['A4 1쪽','A4 2쪽']
+  },
+  activityChoices:{
+    webapp:['값 바꾸기 → 변화 관찰 → 발견한 점 정리','퀴즈 풀기 → 정답·해설 확인','항목 선택 → 결과 비교'],
+    ppt:['도입 질문 → 핵심 개념 → 예시 → 확인 질문','복습 → 탐구 활동 → 발표 → 정리','문제 제시 → 토의 → 결론 정리'],
+    sheet:['개념 정리 → 연습 문제 → 확인 문제','자료 관찰 → 관계 찾기 → 근거 설명','탐구 예상 → 결과 기록 → 결론 쓰기'],
+    exam:['객관식 중심','서술형 중심','객관식과 서술형 혼합'],
+    explain:['핵심 개념 → 쉬운 예시 → 한 줄 요약','질문과 답변으로 설명','그림과 짧은 설명으로 구성'],
+    visual:['두 대상 비교','과정을 순서대로 표현','자료를 그래프로 표현'],
+    notice:['목적 → 일정 → 준비물 → 문의 안내','안내 사항 → 신청 방법 → 제출 기한'],
+    doc:['목적 → 세부 계획 → 역할 → 일정','활동 개요 → 결과 → 개선점'],
+    custom:['도입 → 핵심 내용 → 정리','문제 → 해결 방법 → 확인']
+  },
   studentFields:['known','misc','cls'],
   next:['상황 알려주기','만드는 방법 고르기','확인 기준 보기','요청문 만들기'],
   copyAfter:['복사했어요. AI 채팅창에 붙여 넣어 주세요.','복사했어요. AI의 프로젝트·비서 지침에 저장해 주세요.','복사했어요. 기본 설정을 저장한 AI에서 대괄호를 새 내용으로 바꿔 요청하세요.','복사했어요. 새 채팅에 결과물과 참고자료를 함께 넣어 주세요.','복사했어요. teacher-material 폴더의 SKILL.md 파일로 저장하세요.'],
@@ -748,17 +777,21 @@ const radio=(name,val,label,on)=>`<label class="opt"><input type="radio" name="$
 const detail=(id,title,body)=>`<details id="${id}"><summary>${title}</summary><div>${body}</div></details>`;
 const scopeOptions=value=>`<option value="always" ${value==='always'?'selected':''}>${UI.scopeAlways}</option><option value="request" ${value==='request'?'selected':''}>${UI.scopeRequest}</option>`;
 const explanation=()=>detail('help-step','이 단계가 궁금해요',`<p class="muted">${STEPS[state.step].like}</p>`);
+function choiceInput(id,kind,key,value,options,placeholder){
+ const custom=!!value&&!options.includes(value),data=kind==='ctx'?'data-ctx':'data-meta';
+ return `<select id="${id}" data-choice-${kind}="${key}"><option value="">선택 안 함 · 건너뛰기</option>${options.map(x=>`<option value="${esc(x)}" ${value===x?'selected':''}>${esc(x)}</option>`).join('')}<option value="__custom" ${custom?'selected':''}>직접 입력하기</option></select><div id="${id}-custom" ${custom?'':'hidden'}><label class="sr" for="${id}-text">직접 입력할 내용</label><textarea rows="2" id="${id}-text" ${data}="${key}" placeholder="예: ${esc(placeholder)}">${esc(value||'')}</textarea></div>`;
+}
 function field(f){
-  if(f.k==='out')f={...f,label:'이 자료의 형태·분량',ph:state.type==='ppt'?'슬라이드 10장':state.type==='sheet'?'A4 2쪽, 정답·해설 별도':state.type==='webapp'?'HTML 파일 1개, 휴대폰에서도 사용':f.ph};
-  const multiline=['goal','known','misc','cls','purpose','decided','caution','ref'].includes(f.k);
-  return `<div class="field ${multiline?'wide':''}"><label for="f-${f.k}">${f.label} <span class="scope">${['out','form'].includes(f.k)?'이 자료만':isFixed(f)?'유지할 정보':'이번 수업·업무'}</span></label>${multiline?`<textarea rows="2" id="f-${f.k}" data-ctx="${f.k}" placeholder="예: ${esc(f.ph)}">${esc(state.ctx[f.k]||'')}</textarea>`:`<input id="f-${f.k}" data-ctx="${f.k}" value="${esc(state.ctx[f.k]||'')}" placeholder="예: ${esc(f.ph)}">`}</div>`;
+ if(f.k==='out')f={...f,label:'이 자료의 형태·분량'};
+ const options=f.k==='out'?UI.outputChoices[state.type]:UI.fieldChoices[f.k],multiline=['goal','known','misc','cls','purpose','decided','caution','ref'].includes(f.k),value=state.ctx[f.k]||'';
+ const control=options?choiceInput('f-'+f.k,'ctx',f.k,value,options,f.ph):multiline?`<textarea rows="2" id="f-${f.k}" data-ctx="${f.k}" placeholder="예: ${esc(f.ph)}">${esc(value)}</textarea>`:`<input id="f-${f.k}" data-ctx="${f.k}" value="${esc(value)}" placeholder="예: ${esc(f.ph)}">`;
+ return `<div class="field ${multiline?'wide':''}"><label for="f-${f.k}">${f.label} <span class="scope">${['out','form'].includes(f.k)?'이 자료만':isFixed(f)?'유지할 정보':'이번 수업·업무'}</span></label>${control}</div>`;
 }
 function toolView(){return `<p class="muted">AI에서 실제로 사용할 수 있는 기능만 선택해 주세요. 이곳에서 파일을 첨부하거나 도구를 연결하지는 않아요.</p>${TOOLS.map(t=>`<label class="check"><input type="checkbox" id="tool-${t.k}" data-act="tool" data-k="${t.k}" ${state.tools.includes(t.k)?'checked':''}><span>${t.label}</span></label>`).join('')}`;}
 function ruleEditor(){syncRules(state);return `<ol class="rules">${state.skills.map((t,i)=>`<li class="rule"><label for="s-${i}">방법 ${i+1}</label><textarea rows="2" id="s-${i}" data-skill="${i}">${esc(t)}</textarea><div class="rule-controls"><label class="sr" for="scope-${i}">방법 ${i+1} 적용 범위</label><select id="scope-${i}" data-scope="${i}">${scopeOptions(scopeAt(i))}</select><button data-act="up" data-i="${i}" aria-label="방법 ${i+1} 위로" ${i===0?'disabled':''}>↑</button><button data-act="down" data-i="${i}" aria-label="방법 ${i+1} 아래로" ${i===state.skills.length-1?'disabled':''}>↓</button><button data-act="del" data-i="${i}" aria-label="방법 ${i+1} 삭제">삭제</button></div></li>`).join('')}</ol><div class="field"><label for="newSkill">내 방법 추가</label><textarea id="newSkill" rows="2" placeholder="예: 정답과 해설은 학생용 자료와 분리한다"></textarea></div><div class="rule-controls"><label class="sr" for="newScope">새 방법 적용 범위</label><select id="newScope">${scopeOptions('always')}</select><button data-act="add">추가</button></div><p class="hint">비슷한 방법은 하나로 합쳐 주세요. 분량이나 순서가 서로 충돌하지 않는지도 살펴보세요.</p>`;}
 function activityView(){
- const label=state.type==='webapp'?'학생이 화면에서 무엇을 해 보나요?':state.type==='ppt'?'어떤 흐름으로 수업하나요?':state.type==='sheet'?'학생이 어떤 활동·문제를 풀까요?':'이 자료에 어떤 내용을 담을까요?';
- const hint=state.type==='webapp'?'거리를 바꾸면 해양지각의 나이가 달라지는 모습을 관찰':state.type==='sheet'?'그림 관찰 → 관계 설명 → 확인 문제 3개':'도입 질문 → 핵심 내용 → 확인 활동';
- return `<div class="field"><label for="activity">${label}</label><textarea id="activity" data-meta="activity" rows="2" placeholder="예: ${hint}">${esc(state.activity||'')}</textarea></div>`;
+ const label=state.type==='webapp'?'학생이 해 볼 활동':['notice','doc'].includes(state.type)?'내용을 담는 순서':'활동·수업 흐름';
+ return `<div class="field"><label for="activity">${label} <span class="scope">선택</span></label>${choiceInput('activity','meta','activity',state.activity||'',UI.activityChoices[state.type]||UI.activityChoices.custom,'도입 질문 → 핵심 내용 → 확인 활동')}</div>`;
 }
 function referenceView(){const r=state.reference||{};return detail('reference','교과서·참고 내용 추가 · 선택',`<p class="hint">필요한 부분 1개만 넣어 주세요. 입력은 이 수업의 자료에서 함께 사용해요. 학생 개인정보는 넣지 마세요.</p><div class="field"><label for="refSource">출처·쪽수</label><input id="refSource" data-reference="source" value="${esc(r.source||'')}" placeholder="예: 과학 교과서 52쪽"></div><div class="field"><label for="refText">참고할 본문 발췌</label><textarea id="refText" data-reference="text" rows="4">${esc(r.text||'')}</textarea><p id="refLimit" class="hint">${(r.text||'').length} / ${MAX_REFERENCE}자 · 초과하면 줄인 뒤 전달할 수 있어요. 이름만 적으면 AI에 별도로 첨부해야 해요.</p></div>`);}
 function lessonLabel(l){return l.ctx.cur||l.ctx.purpose||l.ctx.goal||'제목 없는 수업·업무';}
@@ -804,11 +837,11 @@ function curriculumView(){
 }
 
 const VIEWS=[
-()=>`<fieldset><legend>만들 자료</legend><div class="presets">${Object.entries(PRESETS).map(([k,p])=>radio('type',k,p.label,state.type===k)).join('')}</div></fieldset>${state.type==='custom'?`<fieldset><legend>어느 쪽에 가깝나요?</legend><div class="presets">${radio('group','lesson','수업 자료',state.group==='lesson')}${radio('group','doc','업무 문서',state.group==='doc')}</div></fieldset>`:''}<div class="field"><label for="task">하고 싶은 일을 한 줄로 <span class="scope">선택</span></label><input id="task" data-task value="${esc(state.task)}" placeholder="예: ${UI.taskPlaceholder[group()]}"><p class="hint">비워 두면 선택한 자료 이름으로 만들어요.</p></div>`,
+()=>`<fieldset><legend>만들 자료</legend><div class="presets">${Object.entries(PRESETS).map(([k,p])=>radio('type',k,p.label,state.type===k)).join('')}</div></fieldset>${state.type==='custom'?`<fieldset><legend>어느 쪽에 가깝나요?</legend><div class="presets">${radio('group','lesson','수업 자료',state.group==='lesson')}${radio('group','doc','업무 문서',state.group==='doc')}</div></fieldset>`:''}${detail('specific-task','구체적으로 부탁할 내용 · 선택',`<div class="field"><label for="task">하고 싶은 일을 한 줄로 <span class="scope">선택</span></label><input id="task" data-task value="${esc(state.task)}" placeholder="예: ${UI.taskPlaceholder[group()]}"><p class="hint">비워 두면 선택한 자료 이름으로 만들어요.</p></div>`)}`,
 ()=>{
-  const fs=fieldsNow(),primary=group()==='lesson'?['grade','goal']:['reader','purpose'],students=group()==='lesson'?UI.studentFields:[];
-  const rest=fs.filter(f=>!primary.includes(f.k)&&!students.includes(f.k)&&f.k!=='subject');
-  return `${PRIVACY}${group()==='lesson'?`<div class="grid">${subjectView()}${field(fs.find(f=>f.k==='grade'))}</div>${curriculumView()}${field(fs.find(f=>f.k==='goal'))}`:fs.filter(f=>primary.includes(f.k)).map(field).join('')}${activityView()}${detail('extra-context','상황 더 알려주기 · 선택',`${referenceView()}${students.length?detail('student-context','학생에게 더 잘 맞추기 · 선택',fs.filter(f=>students.includes(f.k)).map(field).join('')):''}${detail('more-context','분량·자료 등 더 알려주기 · 선택',`<div class="grid">${rest.map(field).join('')}</div>`)}${detail('fixed-fields','다음에도 유지할 정보 정하기',`<p class="muted">체크한 항목만 기본 설정에 저장해요. 날짜·학습 목표처럼 매번 바뀌는 내용은 체크하지 마세요.</p>${fs.filter(f=>!['out','form','ref'].includes(f.k)).map(f=>`<label class="check"><input type="checkbox" id="fixed-${f.k}" data-fixed="${f.k}" ${isFixed(f)?'checked':''}><span>${f.label}</span></label>`).join('')}`)}`)}`;
+  const fs=fieldsNow(),primary=UI.primaryFields[group()],students=group()==='lesson'?UI.studentFields:[];
+  const rest=fs.filter(f=>!primary.includes(f.k)&&!students.includes(f.k)&&f.k!=='subject'&&f.k!=='goal');
+  return `${PRIVACY}${group()==='lesson'?`<div class="grid">${subjectView()}${field(fs.find(f=>f.k==='grade'))}</div>${field(fs.find(f=>f.k==='cur'))}${curriculumView()}${detail('lesson-goal','차시 목표 직접 적기 · 선택',field(fs.find(f=>f.k==='goal')))}`:fs.filter(f=>primary.includes(f.k)).map(field).join('')}${activityView()}${detail('extra-context','상황 더 알려주기 · 선택',`${referenceView()}${students.length?detail('student-context','학생에게 더 잘 맞추기 · 선택',fs.filter(f=>students.includes(f.k)).map(field).join('')):''}${detail('more-context','분량·자료 등 더 알려주기 · 선택',`<div class="grid">${rest.map(field).join('')}</div>`)}${detail('fixed-fields','다음에도 유지할 정보 정하기',`<p class="muted">체크한 항목만 기본 설정에 저장해요. 날짜·학습 목표처럼 매번 바뀌는 내용은 체크하지 마세요.</p>${fs.filter(f=>!['out','form','ref'].includes(f.k)).map(f=>`<label class="check"><input type="checkbox" id="fixed-${f.k}" data-fixed="${f.k}" ${isFixed(f)?'checked':''}><span>${f.label}</span></label>`).join('')}`)}`)}`;
 },
 ()=>{
   const v=vars(),chips=preset()?.skills||[],autos=autoSkills(v);
@@ -822,7 +855,7 @@ null, // 기존 저장 데이터의 단계 번호를 유지하기 위한 자리.
 ()=>{
  const reusable=resultMode==='reuse',t=RESULT_TABS[state.tab];
  const selector=reusable?`<label for="resultSelect" class="sr">재사용 결과 선택</label><select id="resultSelect">${[1,2,4].map(i=>`<option value="${i}" ${state.tab===i?'selected':''}>${RESULT_TABS[i].name}</option>`).join('')}</select>`:'';
- return `${PRIVACY}<div class="result-choices" role="group" aria-label="사용 방법"><button id="mode-run" data-mode="run" aria-pressed="${resultMode==='run'}">지금 요청하기</button><button id="mode-reuse" data-mode="reuse" aria-pressed="${reusable}">AI 기본 설정 · 선택</button></div>${selector}${!reusable&&state.tab===0?workIntentView():state.tab===3?resultInputView():''}${reusable?'<ol class="flow-list"><li>기본 설정을 AI의 프로젝트·비서 지침에 저장해요.</li><li>같은 곳에서 다음 요청 양식을 채워 사용해요.</li></ol>':''}${state.tab===3?'<p><button data-act="totab" data-i="0">← 지금 사용할 요청문으로</button></p>':''}<div class="handoff"><p>${state.tab===0&&state.intent==='revise'?'최신 결과가 있는 같은 AI 채팅창에 붙여 넣으세요.':t.help.replaceAll('teacher-material',skillName())}</p><div class="actions"><button class="primary" id="copy" data-act="copy">${state.tab===1?'기본 설정 복사':state.tab===4?'스킬 내용 복사':'요청문 복사'}</button><button data-act="dl">파일로 저장</button></div><p id="copyHelp" class="hint"></p><p id="transferWarning" class="hint">${transferAllowed()?'AI의 수신·실행 여부는 이 앱에서 확인하지 않아요.':transferIssue()}</p></div><div class="context-summary"><b>이번에 AI에 보낼 정보</b><p id="contextSummary">${esc(outputSummary())}</p></div><div class="actions"><button class="next-material" data-go="0">이 수업·업무로 다른 자료 만들기 →</button></div><details id="output-text" class="output"><summary>${t.name} 내용 보기</summary><div><pre id="out" class="out" tabindex="0" aria-label="${t.name}">${esc(selectedOutput())}</pre><div class="actions"><button data-act="print">인쇄</button></div></div></details>${detail('review-actions','AI 결과 확인하고 고치기',`<p class="muted">실제 결과를 받은 뒤 선생님이 점검해 주세요.</p><div class="actions"><button data-go="6">결과 확인하고 고치기</button><button data-act="totab" data-i="3">다른 채팅에 검토 맡기기</button></div>`)}${detail('input-summary','입력한 내용 수정하기',summaryView())}`;
+ return `${PRIVACY}<div class="result-choices" role="group" aria-label="사용 방법"><button id="mode-run" data-mode="run" aria-pressed="${resultMode==='run'}">이번 자료 만들기</button><button id="mode-reuse" data-mode="reuse" aria-pressed="${reusable}">반복할 작업의 규칙 저장</button></div>${reusable?'<p class="hint">같은 작성 방법을 여러 번 쓸 때만 이용하세요. AI 설정에 선생님이 직접 저장하는 규칙이에요.</p>':'<p class="hint">처음이라면 이 방법을 쓰세요. 이번 수업의 상황과 조건이 모두 담겨요.</p>'}${selector}${!reusable&&state.tab===0?workIntentView():state.tab===3?resultInputView():''}${reusable?'<ol class="flow-list"><li>규칙을 복사해 AI의 프로젝트·비서 설정에서 ‘지침’에 붙여 넣으세요.</li><li>그 프로젝트·비서에서 새 자료를 요청하세요.</li></ol>':''}${state.tab===3?'<p><button data-act="totab" data-i="0">← 지금 사용할 요청문으로</button></p>':''}<div class="handoff"><p>${state.tab===0&&state.intent==='revise'?'최신 결과가 있는 같은 AI 채팅창에 붙여 넣으세요.':t.help.replaceAll('teacher-material',skillName())}</p><div class="actions"><button class="primary" id="copy" data-act="copy">${state.tab===1?'반복해서 쓸 규칙 복사':state.tab===4?'스킬 내용 복사':'요청문 복사'}</button><button data-act="dl">파일로 저장</button></div><p id="copyHelp" class="hint"></p><p id="transferWarning" class="hint">${transferAllowed()?'AI의 수신·실행 여부는 이 앱에서 확인하지 않아요.':transferIssue()}</p></div><div class="context-summary"><b>이번에 AI에 보낼 정보</b><p id="contextSummary">${esc(outputSummary())}</p></div><div class="actions"><button class="next-material" data-go="0">이 수업·업무로 다른 자료 만들기 →</button></div><details id="output-text" class="output"><summary>${t.name} 내용 보기</summary><div><pre id="out" class="out" tabindex="0" aria-label="${t.name}">${esc(selectedOutput())}</pre><div class="actions"><button data-act="print">인쇄</button></div></div></details>${detail('review-actions','AI 결과 확인하고 고치기',`<p class="muted">실제 결과를 받은 뒤 선생님이 점검해 주세요.</p><div class="actions"><button data-go="6">결과 확인하고 고치기</button><button data-act="totab" data-i="3">다른 채팅에 검토 맡기기</button></div>`)}${detail('input-summary','입력한 내용 수정하기',summaryView())}`;
 },
 ()=>{
  const v=vars(),gates=QG_DEFAULTS.filter(q=>qgOn(q.k,v));
@@ -830,8 +863,8 @@ null, // 기존 저장 데이터의 단계 번호를 유지하기 위한 자리.
 }
 ];
 function summaryView(){
- const primary=group()==='lesson'?['grade','goal']:['reader','purpose'],missing=primary.filter(k=>!state.ctx[k]).map(k=>fieldsNow().find(f=>f.k===k).label);if(!state.activity?.trim())missing.push('활동·내용');
- return `<p>${missing.length?'비어 있는 기본 정보: '+missing.join(', '):'기본 질문에 모두 답했어요.'} 내용의 정확성이나 AI 결과를 검증한 것은 아니에요.</p><div class="actions"><button data-go="1">상황 수정</button><button data-go="2">방법 수정</button><button data-go="3">확인 기준 수정</button><button data-go="0">같은 수업으로 다른 자료</button><button data-act="new-lesson">새 수업·업무 시작</button></div>`;
+ const primary=UI.primaryFields[group()],missing=primary.filter(k=>!state.ctx[k]).map(k=>fieldsNow().find(f=>f.k===k).label);
+ return `<p>${missing.length?'더 알려줄 수 있는 정보: '+missing.join(', '):'기본 질문에 모두 답했어요.'} 내용의 정확성이나 AI 결과를 검증한 것은 아니에요.</p><div class="actions"><button data-go="1">상황 수정</button><button data-go="2">방법 수정</button><button data-go="3">확인 기준 수정</button><button data-go="0">같은 수업으로 다른 자료</button><button data-act="new-lesson">새 수업·업무 시작</button></div>`;
 }
 function sheetHtml(){const v=vars();return `<h2>결과 점검표 · ${esc(v.task)}</h2><table><thead><tr><th>기준</th><th>확인할 내용</th><th>결과·고칠 점</th></tr></thead><tbody>${QG_DEFAULTS.filter(q=>qgOn(q.k,v)).map(q=>`<tr><td>${q.label}</td><td>${esc(gateText(q,v))}</td><td>□ 통과 □ 수정 필요 □ 확인 불가<br><br></td></tr>`).join('')}</tbody></table>`;}
 function render(focusId,keepOpen=true){
@@ -840,7 +873,7 @@ function render(focusId,keepOpen=true){
  const draft={...state.drafts,...(keepOpen?Object.fromEntries(['newSkill','newScope','newFix','fixScope','fixReplace'].map(id=>[id,document.getElementById(id)?.value]).filter(([,v])=>v!==undefined)):{})};
  const s=state.step,idx=UI.flow.indexOf(s);
  $('#steps').innerHTML=UI.flow.map((i,n)=>`<li><button id="nav-${i}" data-go="${i}" ${s===i?'aria-current="step"':''}><span class="step-num">${n+1}</span>${STEPS[i].nav}</button></li>`).join('');
- $('#card').innerHTML=(showResume?`<div class="banner" id="resumeBanner"><p>${NOTICES.resume}</p><div class="actions"><button class="primary" data-act="keep">이어서 하기</button><button data-act="erase">공용 PC 기록 모두 지우기</button></div></div>`:'')+(loadIssue?`<p class="callout" role="alert">${loadIssue}${unreadableSavedData?'<br><button data-act="recover">이전 저장 내용 보관하기</button>':''}</p>`:'')+`<p class="eyebrow">${s===6?'사용한 뒤 다듬기':`${idx+1} / ${UI.flow.length}`}</p><h2 id="pageTitle" tabindex="-1">${STEPS[s].title}</h2><p class="intro">${s===5?RESULT_TABS[state.tab].intro:STEPS[s].easy}</p>`+workspaceView()+VIEWS[s]();
+ $('#card').innerHTML=(showResume?`<div class="banner" id="resumeBanner"><p>${NOTICES.resume}</p><div class="actions"><button class="primary" data-act="keep">이어서 하기</button><button data-act="erase">공용 PC 기록 모두 지우기</button></div></div>`:'')+(loadIssue?`<p class="callout" role="alert">${loadIssue}${unreadableSavedData?'<br><button data-act="recover">이전 저장 내용 보관하기</button>':''}</p>`:'')+`<p class="eyebrow">${s===6?'사용한 뒤 다듬기':`${idx+1} / ${UI.flow.length}`}</p><h2 id="pageTitle" tabindex="-1">${s===5&&resultMode==='reuse'?RESULT_TABS[state.tab].name:STEPS[s].title}</h2><p class="intro">${s===5?RESULT_TABS[state.tab].intro:STEPS[s].easy}</p>`+workspaceView()+VIEWS[s]();
  for(const id of opened){const el=document.getElementById(id);if(el)el.open=true;}
  for(const [id,value] of Object.entries(draft)){const el=document.getElementById(id);if(el)el.value=value;}
  $('#stepHelp').innerHTML=explanation();
@@ -941,6 +974,12 @@ card.addEventListener('input',e=>{
 });
 card.addEventListener('change',e=>{
  const t=e.target,d=t.dataset,k=d.k;dismissResume();
+ if(d.choiceCtx||d.choiceMeta){
+  const key=d.choiceCtx||d.choiceMeta,box=$('#'+t.id+'-custom'),input=$('#'+t.id+'-text');
+  if(t.value==='__custom'){box.hidden=false;input.focus();return;}
+  if(d.choiceCtx)state.ctx[key]=t.value;else state[key]=t.value;
+  box.hidden=true;input.value=t.value;save();live();return;
+ }
  if(t.id==='subjectSelect'||t.id==='curriculumVersion'){
   const custom=t.id==='subjectSelect'&&t.value==='__custom',key=t.id==='subjectSelect'?'subject':'curriculumVersion',value=custom?'':t.value;
   if(setCurriculumContext(key,value)){if(t.id==='subjectSelect')state.ctx.subjectMode=custom?'custom':'';curriculumQuery='';curriculumVisible=5;save();}

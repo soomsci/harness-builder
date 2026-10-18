@@ -42,6 +42,29 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  assert.notEqual(run('state.ctx.goal'),'사용자 수정');assert.notEqual(run('state.skills[0]'),'사용자 방법');
  const beforeInvalid=run('workspace.lessons.length');run("loadExample('unknown')");assert.equal(run('workspace.lessons.length'),beforeInvalid);
  console.log('EXAMPLES OK · 9 types, button flow, context/activity output, original work preservation, independent copies');
+ // Dropdowns store actual wording, preserve legacy custom values and never save the UI sentinel.
+ event('change',{name:'type',value:'sheet'});
+ event('change',{id:'f-grade',dataset:{choiceCtx:'grade'},value:'중학교 2학년'});
+ assert.equal(run('state.ctx.grade'),'중학교 2학년');assert.ok(run('composition().text').includes('중학교 2학년'));
+ event('change',{id:'f-grade',dataset:{choiceCtx:'grade'},value:'__custom'});
+ assert.equal(node('f-grade-custom').hidden,false);assert.equal(run('state.ctx.grade'),'중학교 2학년');
+ event('input',{id:'f-grade-text',dataset:{ctx:'grade'},value:'중1·2 통합반'});
+ assert.ok(run("field(fieldsNow().find(f=>f.k==='grade'))").includes('value="__custom" selected'));
+ event('change',{id:'f-grade',dataset:{choiceCtx:'grade'},value:''});assert.equal(run('state.ctx.grade'),'');
+ assert.equal(node('f-grade-custom').hidden,true);
+ event('change',{id:'activity',dataset:{choiceMeta:'activity'},value:'자료 관찰 → 관계 찾기 → 근거 설명'});
+ const dropdownMaterial=run('state.materialId');assert.ok(run('composition().text').includes('자료 관찰 → 관계 찾기 → 근거 설명'));
+ event('change',{name:'type',value:'ppt'});event('change',{name:'type',value:'sheet'});
+ assert.equal(run('state.materialId'),dropdownMaterial);assert.equal(run('state.activity'),'자료 관찰 → 관계 찾기 → 근거 설명');
+ assert.equal(JSON.parse(values.get('harness-builder-v2')).schema,4);
+ for(const type of run('Object.keys(PRESETS)')){
+  run(`openMaterial('${type}')`);assert.ok(run('activityView()').includes('data-choice-meta="activity"'));
+  assert.ok(run('VIEWS[1]()').includes('data-choice-ctx='));
+ }
+ run("resultMode='run';state.tab=0");assert.ok(run('VIEWS[5]()').includes('이번 자료 만들기'));assert.ok(!run('VIEWS[5]()').includes('AI 기본 설정 · 선택'));
+ run("resultMode='reuse';state.tab=1");assert.ok(run('VIEWS[5]()').includes('반복할 작업의 규칙 저장'));assert.ok(run('VIEWS[5]()').includes('직접 저장하는 규칙'));
+ run("resultMode='run';state.tab=0");
+ console.log('DROPDOWNS OK · values, custom fallback, skip, persistence, material isolation, 9 types, handoff wording');
  // Curriculum controls use the same delegated event path as the visible UI.
  event('change',{name:'type',value:'sheet'});
  event('change',{id:'subjectSelect',value:'과학'});event('change',{id:'curriculumVersion',value:'2022'});
