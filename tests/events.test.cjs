@@ -2,7 +2,7 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const source=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8').split('<script>')[1].split('</script>')[0];
 const values=new Map(),nodes=new Map(),windows={};let confirmations=true;
 function node(id){if(!nodes.has(id))nodes.set(id,{id,value:'',hidden:false,textContent:'',innerHTML:'',checked:false,style:{},dataset:{},listeners:{},classList:{add(){},remove(){},toggle(){}},addEventListener(k,fn){this.listeners[k]=fn},focus(){},scrollIntoView(){},click(){},remove(){}});return nodes.get(id);}
-const ctx={console,confirm:()=>confirmations,localStorage:{getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)},document:{querySelector:s=>['#fixReplace','#fixScope'].includes(s)?null:node(s.slice(1)),querySelectorAll:s=>s.includes('chk-')?[node('mark-fact')]:[],getElementById:id=>nodes.get(id)||null,addEventListener(){},createElement:()=>node('anchor'),body:{append(){}}},window:{scrollTo(){},print(){},addEventListener:(k,fn)=>windows[k]=fn},location:{hash:''},navigator:{clipboard:{writeText:async()=>{}}},setTimeout:()=>0,clearTimeout(){},Blob,URL:{createObjectURL:()=>'',revokeObjectURL(){}}};
+const ctx={console,crypto:require('node:crypto').webcrypto,TextEncoder,confirm:()=>confirmations,localStorage:{getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)},document:{querySelector:s=>['#fixReplace','#fixScope'].includes(s)?null:node(s.slice(1)),querySelectorAll:s=>s.includes('chk-')?[node('mark-fact')]:[],getElementById:id=>nodes.get(id)||null,addEventListener(){},createElement:()=>node('anchor'),body:{append(){}}},window:{scrollTo(){},print(){},addEventListener:(k,fn)=>windows[k]=fn},location:{hash:''},navigator:{clipboard:{writeText:async()=>{}}},setTimeout:()=>0,clearTimeout(){},Blob,URL:{createObjectURL:()=>'',revokeObjectURL(){}}};
 vm.createContext(ctx);vm.runInContext(source,ctx);
 const run=s=>vm.runInContext(s,ctx),event=(kind,t)=>node('card').listeners[kind]({target:{id:'',name:'',dataset:{},...t}});
 const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s==='[data-mode]'?null:{dataset:{act,...rest}}}});
@@ -17,15 +17,15 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  event('input',{dataset:{meta:'resultName'},value:'결과1.pdf'});await act('new-result');event('change',{name:'chk-fact',value:'o'});node('mark-fact').checked=true;
  event('input',{dataset:{meta:'resultName'},value:'결과2.pdf'});assert.equal(run('state.check.fact'),'o');assert.equal(run('state.resultRecord.version'),1);await act('new-result');assert.equal(run('Object.keys(state.check).length'),0);assert.equal(run('state.checkHistory.length'),1);
  event('input',{dataset:{ctx:'goal'},value:'새 목표'});event('change',{name:'chk-fact',value:'o'});assert.equal(run('Object.keys(state.check).length'),0);
- assert.ok(run("composition('review').text").includes('이전 목표'));assert.ok(run('conditionView()').includes('이전 조건에서 확인'));
+ assert.ok(run("composition('review').text").includes('이전 목표'));assert.ok(run('conditionView()').includes('수업 정보나 제작 조건이 달라졌어요'));
  await act('recheck');event('change',{name:'chk-fact',value:'o'});assert.equal(run('state.check.fact'),'o');assert.equal(run('staleCheck()'),false);
  // A result revision owns its evidence; renaming preserves it, content changes require registration.
  event('input',{dataset:{evidence:'fact'},value:'교과서 53쪽과 문항 2를 대조함'});
  assert.ok(run("composition('resume').text").includes('교과서 53쪽과 문항 2를 대조함'));
  event('input',{dataset:{meta:'resultName'},value:'결과_이름수정.pdf'});
  assert.equal(run('state.check.fact'),'o');assert.equal(run('state.checkRecord.evidence.fact'),'교과서 53쪽과 문항 2를 대조함');
- event('input',{id:'resultText',value:'새 문항 본문'});assert.equal(run('state.checkRecord'),null);
- await act('recheck');assert.equal(run('state.checkRecord'),null);
+ await act('rename-result');event('input',{id:'resultText',value:'기존 문항 본문'});await act('connect-body');assert.equal(run('state.check.fact'),'o');
+ event('input',{id:'resultText',value:'새 문항 본문'});assert.equal(run('pendingResultBody()'),true);await act('connect-body');assert.equal(run('pendingResultBody()'),true);
  await act('new-result');assert.equal(run('state.resultRecord.version'),3);assert.equal(run('transientResult'),'새 문항 본문');
  assert.equal(run('Object.keys(state.checkRecord.evidence).length'),0);
  await act('recheck');event('change',{name:'chk-fact',value:'d'});event('input',{dataset:{evidence:'fact'},value:'문항 2의 정답 근거가 없음'});
