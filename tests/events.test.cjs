@@ -42,6 +42,25 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  assert.notEqual(run('state.ctx.goal'),'사용자 수정');assert.notEqual(run('state.skills[0]'),'사용자 방법');
  const beforeInvalid=run('workspace.lessons.length');run("loadExample('unknown')");assert.equal(run('workspace.lessons.length'),beforeInvalid);
  console.log('EXAMPLES OK · 9 types, button flow, context/activity output, original work preservation, independent copies');
+ // Curriculum controls use the same delegated event path as the visible UI.
+ event('change',{name:'type',value:'sheet'});
+ event('change',{id:'subjectSelect',value:'과학'});event('change',{id:'curriculumVersion',value:'2022'});
+ event('input',{id:'standardSearch',value:'지권'});assert.ok(node('standardsResults').innerHTML.includes('9과09-01'));assert.ok(!node('standardsResults').innerHTML.includes('9수'));
+ await act('standard-add',{code:'9과02-01'});assert.equal(run('selectedStandards().length'),1);
+ event('change',{name:'type',value:'ppt'});assert.equal(run('selectedStandards().length'),1);
+ confirmations=false;event('change',{id:'curriculumVersion',value:'2015'});assert.equal(run('state.ctx.curriculumVersion'),'2022');
+ confirmations=true;event('change',{id:'curriculumVersion',value:'2015'});assert.equal(run('selectedStandards().length'),0);
+ await act('standard-add',{code:'9과01-01'});assert.ok(run('curriculumText()').includes('지구계'));
+ await act('standard-remove',{code:'9과01-01'});assert.equal(run('selectedStandards().length'),0);
+ event('input',{id:'standardSearch',value:'존재하지않는검색어'});assert.ok(node('standardsResults').innerHTML.includes('찾은 기준이 없어요'));
+ event('change',{id:'subjectSelect',value:'__custom'});assert.equal(run('state.ctx.subjectMode'),'custom');
+ event('input',{id:'customSubject',dataset:{ctx:'subject'},value:'보건'});assert.equal(run('state.ctx.subject'),'보건');assert.equal(run('curriculumRows().length'),0);
+ // Corrupt/legacy stored criteria must block transfers even when the subject is empty.
+ run("state.ctx.subject='';state.ctx.curriculumVersion='2022';state.ctx.standardCodes='9과02-01';state.intent='create';state.tab=0");
+ assert.equal(run('curriculumText()'),'');assert.ok(run('curriculumIssue()'));assert.equal(run('transferAllowed()'),false);
+ const priorTransfer=run('JSON.stringify(state.lastTransfer)');
+ for(const tab of [0,3]){run(`state.tab=${tab}`);await act('copy');await act('dl');assert.equal(run('JSON.stringify(state.lastTransfer)'),priorTransfer);}
+ console.log('CURRICULUM EVENTS OK · search, add/remove, material switch, version change cancellation, empty search, custom subject, empty-subject transfer blocking');
  values.set('harness-builder-v1','legacy');values.set('harness-builder-v1-recovery','recovery');run('eraseWorkspace()');assert.equal(values.size,0);
  // A remote clear blocks autosaving the currently open page.
  windows.storage({key:null});assert.equal(run('save()'),false);assert.equal(values.size,0);
