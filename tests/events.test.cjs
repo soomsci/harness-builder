@@ -90,6 +90,16 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  assert.ok(run('composition().text').includes('10초 생각할 시간'));await act('del',{i:String(addedIndex)});
  assert.ok(!run('composition().text').includes('10초 생각할 시간'));
  console.log('SUBJECT ACTIVITIES / METHODS OK · 12 subjects × 7 lesson types, web interactions, preserved activity, fallback, custom method add/edit/remove/scope');
+ // The persistent right-hand preview follows input immediately and the actual selected export.
+ run("state.step=1;state.tab=1;resultMode='reuse'");
+ event('input',{dataset:{ctx:'purpose'},value:'실시간 미리보기 확인'});
+ assert.ok(node('pv').textContent.includes('실시간 미리보기 확인'));assert.equal(node('previewTitle').textContent,'작성 중인 요청문');
+ event('change',{id:'activity',dataset:{choiceMeta:'activity'},value:'안내 사항 → 신청 방법 → 제출 기한'});
+ assert.ok(node('pv').textContent.includes('안내 사항 → 신청 방법 → 제출 기한'));
+ run("state.step=5;state.tab=1;live()");assert.equal(node('pv').textContent,run('selectedOutput()'));assert.equal(node('previewTitle').textContent,run('RESULT_TABS[1].name'));
+ run("state.tab=0;state.intent='revise';state.editProblem='실시간 수정 요청';live()");assert.equal(node('pv').textContent,run('selectedOutput()'));assert.ok(node('pv').textContent.includes('실시간 수정 요청'));
+ run("state.intent='create';state.step=1;render()");assert.equal(node('previewUse').hidden,false);
+ console.log('LIVE PREVIEW OK · immediate input/select changes, creation versus reuse/revision output, persistent panel');
  // Curriculum controls use the same delegated event path as the visible UI.
  event('change',{name:'type',value:'sheet'});
  event('change',{id:'subjectSelect',value:'과학'});event('change',{id:'curriculumVersion',value:'2022'});
