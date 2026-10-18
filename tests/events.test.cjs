@@ -26,6 +26,22 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  // Reset only the active material; cancellation and total erasure have distinct boundaries.
  const count=run('workspace.lessons.length');confirmations=false;run('eraseWorkspace()');assert.equal(run('workspace.lessons.length'),count);
  confirmations=true;run('resetAll()');assert.equal(run('workspace.lessons.length'),count);
+ // Every example opens separately through the actual button and leaves existing work intact.
+ const originalLessons=run('JSON.stringify(workspace.lessons)'),originalCount=run('workspace.lessons.length');
+ const examples=run('Object.keys(PRESETS)');
+ for(const type of examples){
+  node('exampleType').value=type;node('exampleType').onchange();assert.ok(node('exampleTask').textContent);
+  node('loadExample').onclick();assert.equal(run('state.type'),type);assert.equal(run('state.step'),1);
+  assert.equal(run('group()'),['notice','doc'].includes(type)?'doc':'lesson');
+  assert.ok(run('state.activity.length')>0);assert.ok(run('state.skills.length')>0);
+  assert.ok(run("composition('create').text.includes(state.activity)"));
+ }
+ assert.equal(run('workspace.lessons.length'),originalCount+9);
+ assert.equal(run(`JSON.stringify(workspace.lessons.slice(0,${originalCount}))`),originalLessons);
+ run("state.ctx.goal='사용자 수정';state.skills[0]='사용자 방법';save();loadExample('custom')");
+ assert.notEqual(run('state.ctx.goal'),'사용자 수정');assert.notEqual(run('state.skills[0]'),'사용자 방법');
+ const beforeInvalid=run('workspace.lessons.length');run("loadExample('unknown')");assert.equal(run('workspace.lessons.length'),beforeInvalid);
+ console.log('EXAMPLES OK · 9 types, button flow, context/activity output, original work preservation, independent copies');
  values.set('harness-builder-v1','legacy');values.set('harness-builder-v1-recovery','recovery');run('eraseWorkspace()');assert.equal(values.size,0);
  // A remote clear blocks autosaving the currently open page.
  windows.storage({key:null});assert.equal(run('save()'),false);assert.equal(values.size,0);

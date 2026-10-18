@@ -14,15 +14,15 @@ env=context(JSON.stringify({type:'unrecognized',step:99,ctx:null,skills:[null,12
 env=context();env.ctx.localStorage.setItem=()=>{throw new Error('quota')};assert.equal(env.run('save()'),false);assert.ok(env.status.textContent.includes('저장하지 못했어요'));
 env=context(JSON.stringify({drafts:{newSkill:'아직 추가하지 않은 규칙',newFix:'아직 담지 않은 피드백'}}));assert.equal(env.run('state.drafts.newSkill'),'아직 추가하지 않은 규칙');assert.ok(env.run('showResume'));
 console.log('STATE OK · '+count+' migration, recovery, persistence assertions');
-// Every view must build for both preset examples, for empty state, and after a feedback change.
+// Every view must build for all nine examples and empty state.
 const views=source.slice(source.indexOf('/* ---------- 화면 ---------- */'),source.indexOf('function render('));
 env=context();env.run(views);
-for(const key of ['lesson','doc','empty']){
+for(const key of [...env.run('Object.keys(EXAMPLES)'),'empty']){
  env.run(key==='empty'?'state=blank()':`state={...blank(),...JSON.parse(JSON.stringify(EXAMPLES.${key}))}`);
  for(const step of [0,1,2,3,5,6]){const html=env.run(`state.step=${step};VIEWS[${step}]()`);assert.ok(html.length>0);assert.ok(!html.includes('undefined'))}
  for(const tab of [0,1,2,3,4]){const html=env.run(`state.step=5;state.tab=${tab};resultMode=[1,2,4].includes(state.tab)?'reuse':'run';VIEWS[5]()`);assert.ok(!html.includes('undefined'))}
 }
-console.log('VIEWS OK · 33 preset / empty / export view builds');
+console.log('VIEWS OK · 110 example / empty / export view builds');
 
 // Exercise the reported replacement-scope regression through the UI functions with small DOM controls.
 env=context();
@@ -55,7 +55,7 @@ console.log('REVIEW REGRESSION OK · replacement scope resets after deselect/add
  env.run(source.slice(source.indexOf('async function copy('),source.indexOf('const hasInput=')));
  assert.equal(await env.run('copy("내용")'),false);assert.equal(ui['#output-text'].open,true);assert.ok(ui['#copyHelp'].textContent.includes('직접 선택'));assert.equal(ui['#out'].focused,true);
  env.ctx.navigator.clipboard.writeText=async text=>{copied=text};assert.equal(await env.run('copy("실제 복사할 내용")'),true);assert.equal(copied,'실제 복사할 내용');
- env.run("state={...blank(),...JSON.parse(JSON.stringify(EXAMPLES.lesson)),tab:1};download(outputs()[1],fileName(1))");
+ env.run("state={...blank(),...JSON.parse(JSON.stringify(EXAMPLES.sheet)),tab:1};download(outputs()[1],fileName(1))");
  assert.equal(clicked,true);assert.equal(anchor.download,'2_기본설정.md');assert.equal(await downloaded.text(),env.run('outputs()[1]'));
  env.run('printOutput()');assert.equal(printed,1);assert.ok(ui['#sheet'].innerHTML.includes('나의 AI 업무 설정'));assert.ok(!ui['#sheet'].innerHTML.includes('해저확장설'));
  env.run('printOutput(true)');assert.equal(printed,2);assert.ok(ui['#sheet'].innerHTML.includes('결과 점검표'));
