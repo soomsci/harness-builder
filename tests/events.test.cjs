@@ -75,7 +75,7 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
   run(`openMaterial('${type}')`);assert.ok(run('activityView()').includes('data-choice-meta="activity"'));
   assert.ok(run('VIEWS[1]()').includes('data-choice-ctx='));
  }
- run("resultMode='run';state.tab=0");assert.ok(run('VIEWS[5]()').includes('이번 자료 만들기'));assert.ok(!run('VIEWS[5]()').includes('AI 기본 설정 · 선택'));
+ run("resultMode='run';state.tab=0");assert.ok(run('VIEWS[5]()').includes('지금 사용할 요청문 (프롬프트)'));assert.ok(!run('VIEWS[5]()').includes('AI 기본 설정 · 선택'));
  run("resultMode='reuse';state.tab=1");assert.ok(run('VIEWS[5]()').includes('반복할 작업의 규칙 저장'));assert.ok(run('VIEWS[5]()').includes('직접 저장하는 규칙'));
  run("resultMode='run';state.tab=0");
  console.log('DROPDOWNS OK · values, custom fallback, skip, persistence, material isolation, 9 types, handoff wording');

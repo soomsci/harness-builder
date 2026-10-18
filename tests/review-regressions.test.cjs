@@ -31,7 +31,7 @@ function reset(){values.clear();confirmations=true;run("loadIssue='';externalUpd
  assert.equal(run('loadIssue'),'');assert.ok(run('curriculumIssue()'));run('composition()');assert.equal(run('state.ctx.standardArchive'),archive);assert.equal(run('save()'),true);
  // Modern snapshots ignore label-only edits, but real inputs and procedure versions differ.
  reset();run('snapshot=conditionSnapshot();snapshot.blocks[0].label="표시용 이름 변경"');assert.equal(run('conditionsEqual(snapshot,conditionSnapshot())'),true);
- run('snapshot.procedureVersion=0');assert.equal(run('conditionDifference(snapshot,conditionSnapshot())'),'app');assert.ok(run('conditionMessage(snapshot)').includes('교사 입력은 같지만'));
+ run('snapshot.procedureVersion=0;snapshot.blocks.find(b=>b.key==="procedure").text="이전 확인 절차"');assert.equal(run('conditionDifference(snapshot,conditionSnapshot())'),'app');assert.ok(run('conditionMessage(snapshot)').includes('교사 입력은 같지만'));
  run('snapshot=conditionSnapshot();delete snapshot.inputs;delete snapshot.procedureVersion;snapshot.blocks=snapshot.blocks.filter(b=>b.key!=="procedure")');assert.equal(run('conditionDifference(snapshot,conditionSnapshot())'),'legacy');assert.ok(run('conditionMessage(snapshot)').includes('앱 개편 전 기록'));
  run("state.ctx.goal='새 목표'");assert.equal(run('conditionDifference(snapshot,conditionSnapshot())'),'changed');
  // Legacy reference migration happens once at the shared lesson level, including old material ctx.
