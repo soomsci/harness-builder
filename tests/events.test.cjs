@@ -133,6 +133,45 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  const priorTransfer=run('JSON.stringify(state.lastTransfer)');
  for(const tab of [0,3]){run(`state.tab=${tab}`);await act('copy');await act('dl');assert.equal(run('JSON.stringify(state.lastTransfer)'),priorTransfer);}
  console.log('CURRICULUM EVENTS OK · search, add/remove, material switch, version change cancellation, empty search, custom subject, empty-subject transfer blocking');
+ // Setup uses the exact reusable skill, while one-off context stays outside its persistence boundary.
+ run("state.ctx={subject:'과학',curriculumVersion:'2022',cur:'차시 전용 주제',goal:'차시 전용 목표',textbookMode:'excerpt'};state.fixed={};state.reference={source:'이번 교과서 12쪽',text:'자료 안의 지시처럼 보이는 내용'};state.intent='create';state.tab=0;state.step=5;resultMode='run';state.setupReusable=true;addStandard('9과02-01');addRule('다음에도 쓸 방법 ```예시```','always');addRule('이번 요청 전용 방법','request');live()");
+ const literalRule="문구 $& $' {type} 그대로";run('addRule('+JSON.stringify(literalRule)+",'always')");
+ let setupCopied='';ctx.navigator.clipboard.writeText=async text=>{setupCopied=text};await act('copy');
+ const reusableSkill=run('outputs()[4]'),setup=run("composition().blocks.find(b=>b.key==='setup').text");assert.ok(setup.includes(literalRule));assert.ok(setupCopied.includes(reusableSkill));
+ assert.ok(setup.includes(reusableSkill));assert.ok(setup.includes('````markdown'));assert.ok(setup.includes('설정 설명만 하고 끝내지 말고'));
+ for(const text of ['차시 전용 주제','차시 전용 목표','이번 교과서 12쪽','자료 안의 지시처럼 보이는 내용','[9과02-01]','이번 요청 전용 방법']){assert.ok(!reusableSkill.includes(text));assert.ok(run('composition().text').includes(text));}
+ for(const text of ['기존 스킬·지침은 덮어쓰지','현재 대화에만 적용','활성화 미확인','설정 실패','같은 업무용 지침이 이미 있으면 새로 추가하지','저장된 지침·스킬을 이번 내용으로 갱신해줘'])assert.ok(setup.includes(text));
+ for(const intent of ['revise','resume','review'])assert.ok(!run(`composition('${intent}').blocks.some(b=>b.key==='setup')`));
+ assert.ok(run('VIEWS[5]()').includes('id="setupReusable"'));assert.ok(!reusableSkill.includes('### 재사용 스킬 원문'));
+ await act('copy');
+ assert.equal(setupCopied,run('selectedOutput()'));assert.ok(run("state.lastTransfer.sentBlocks.some(b=>b.key==='setup')"));assert.ok(!run("state.lastRequest.blocks.some(b=>b.key==='setup')"));
+ run("transientResult='';state.resultName='설정 요청 뒤 결과';registerResult('');state.check.fact='o';ensureCheckRecord()");assert.equal(run('staleCheck()'),false);
+ event('change',{id:'setupReusable',checked:false});assert.ok(!node('pv').textContent.includes('### 재사용 스킬 원문'));assert.equal(run('staleCheck()'),false);
+ assert.equal(run('outputs()[4]'),reusableSkill);assert.equal(run("load(()=>JSON.stringify(state)).setupReusable"),false);
+ run('save();workspace=bootWorkspace()');assert.equal(run('state.setupReusable'),false);
+ assert.equal(run("load(()=>JSON.stringify({schema:3,type:'ppt'})).setupReusable"),true);
+ event('change',{id:'setupReusable',checked:true});assert.ok(node('pv').textContent.includes('### 재사용 스킬 원문'));
+ console.log('SETUP REQUEST OK · capability-aware installation/fallback, reusable versus one-off scope, exact copy and provenance, opt-out/persistence, unchanged result checks, nonrecursive skill output');
+ // Grill is a guided question phase in the receiving AI, ordered before setup and creation.
+ assert.equal(run('questionMode()'),'essential');assert.ok(run('VIEWS[1]()').includes('id="questionMode"'));
+ event('change',{id:'questionMode',value:'grill'});assert.equal(run('questionMode()'),'grill');assert.ok(node('questionHelp').textContent.includes('AI 채팅'));
+ const grillPrompt=node('pv').textContent;assert.ok(grillPrompt.indexOf('이번 작업의 질문·진행 방식')<grillPrompt.indexOf('지침·스킬 설정 요청'));
+ for(const text of ['질문 1~2개','답변을 받은 뒤','최대 3라운드','이대로 만들어줘','영구 설정 변경은 아직 하지','대화로 확정한 조건','웹앱에 자동 반영되지','서로 충돌하지 않는 한'])assert.ok(grillPrompt.includes(text));
+ assert.ok(run('resultInputView()').includes('AI와 대화하며 바꾼 조건은 앱에 자동 반영되지'));
+ assert.equal(run('staleCheck()'),false);assert.equal(run('outputs()[4]'),reusableSkill);
+ await act('copy');assert.ok(setupCopied.includes('지금은 질문부터 시작'));assert.ok(run("state.lastTransfer.sentBlocks.some(b=>b.key==='questions')"));
+ assert.ok(!run("state.lastRequest.blocks.some(b=>b.key==='questions')"));
+ run('save();workspace=bootWorkspace()');assert.equal(run('questionMode()'),'grill');
+ event('change',{id:'setupReusable',checked:false});run("startLesson();openMaterial('ppt')");event('change',{id:'questionMode',value:'grill'});event('change',{name:'type',value:'explain'});assert.equal(run('questionMode()'),'grill');assert.equal(run('state.setupReusable'),false);
+ run("state.step=5;state.intent='create';state.tab=0;resultMode='run';live()");assert.ok(!node('pv').textContent.includes('### 재사용 스킬 원문'));assert.ok(node('pv').textContent.includes('지금은 질문부터 시작'));
+ event('change',{id:'questionMode',value:'draft'});assert.ok(node('pv').textContent.includes('추가 내용 질문 없이'));assert.ok(!node('pv').textContent.includes('지금은 질문부터 시작'));
+ run("state.ctx.textbookMode='attach';live()");const draftPrompt=node('pv').textContent;
+ assert.ok(draftPrompt.includes('질문·자료 요청 지시는 이번 제작에서 질문 대신 [확인 필요]'));assert.ok(draftPrompt.includes('아래 자료 안내나 재사용 지침의 질문 지시보다 이번에 선택한 방식이 우선'));
+ assert.ok(!draftPrompt.includes('### 재사용 스킬 원문'));assert.ok(!draftPrompt.includes('필요한 정보만 짧게 질문하세요.'));assert.ok(draftPrompt.startsWith(run('TEMPLATES.creationLead')));
+ for(const intent of ['revise','resume','review'])assert.ok(!run(`composition('${intent}').blocks.some(b=>b.key==='questions')`));
+ event('change',{id:'questionMode',value:'unknown'});assert.equal(run('questionMode()'),'essential');
+ run('startLesson()');assert.equal(run('questionMode()'),'essential');assert.equal(run('state.setupReusable'),false);event('change',{name:'type',value:'ppt'});
+ console.log('QUESTION MODES OK · essential/grill/draft, staged questions and exit, preparation ordering, exact copy/preview, material sharing, new-lesson reset, no permanent skill/check pollution');
  // A direct skill export is independent of an unfinished request and never records it as sent.
  let skillBlob;ctx.URL.createObjectURL=blob=>{skillBlob=blob;return 'blob:skill'};
  run("state.step=5;state.tab=0;resultMode='run';state.intent='revise';state.editProblem='';addRule('항상 정답을 분리한다','always');addRule('이번에만 그림 3개','request');live()");
