@@ -153,7 +153,8 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  event('change',{id:'setupReusable',checked:true});assert.ok(node('pv').textContent.includes('### 재사용 스킬 원문'));
  console.log('SETUP REQUEST OK · capability-aware installation/fallback, reusable versus one-off scope, exact copy and provenance, opt-out/persistence, unchanged result checks, nonrecursive skill output');
  // Grill is a guided question phase in the receiving AI, ordered before setup and creation.
- assert.equal(run('questionMode()'),'essential');assert.ok(run('VIEWS[1]()').includes('id="questionMode"'));
+ assert.equal(run('questionMode()'),'essential');assert.ok(!run('VIEWS[1]()').includes('id="questionMode"'));
+ assert.ok(run('VIEWS[2]()').startsWith(run('questionView()')));assert.ok(run('VIEWS[2]()').includes('애매한 부분 먼저 물어보기 (Grill)'));
  event('change',{id:'questionMode',value:'grill'});assert.equal(run('questionMode()'),'grill');assert.ok(node('questionHelp').textContent.includes('AI 채팅'));
  const grillPrompt=node('pv').textContent;assert.ok(grillPrompt.indexOf('이번 작업의 질문·진행 방식')<grillPrompt.indexOf('지침·스킬 설정 요청'));
  for(const text of ['질문 1~2개','답변을 받은 뒤','최대 3라운드','이대로 만들어줘','영구 설정 변경은 아직 하지','대화로 확정한 조건','웹앱에 자동 반영되지','서로 충돌하지 않는 한'])assert.ok(grillPrompt.includes(text));
@@ -162,6 +163,7 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  await act('copy');assert.ok(setupCopied.includes('지금은 질문부터 시작'));assert.ok(run("state.lastTransfer.sentBlocks.some(b=>b.key==='questions')"));
  assert.ok(!run("state.lastRequest.blocks.some(b=>b.key==='questions')"));
  run('save();workspace=bootWorkspace()');assert.equal(run('questionMode()'),'grill');
+ event('change',{id:'questionMode',value:'essential'});assert.ok(!node('pv').textContent.includes('지금은 질문부터 시작'));assert.ok(node('questionHelp').textContent.includes('Grill은 사용하지 않고'));
  event('change',{id:'setupReusable',checked:false});run("startLesson();openMaterial('ppt')");event('change',{id:'questionMode',value:'grill'});event('change',{name:'type',value:'explain'});assert.equal(run('questionMode()'),'grill');assert.equal(run('state.setupReusable'),false);
  run("state.step=5;state.intent='create';state.tab=0;resultMode='run';live()");assert.ok(!node('pv').textContent.includes('### 재사용 스킬 원문'));assert.ok(node('pv').textContent.includes('지금은 질문부터 시작'));
  event('change',{id:'questionMode',value:'draft'});assert.ok(node('pv').textContent.includes('추가 내용 질문 없이'));assert.ok(!node('pv').textContent.includes('지금은 질문부터 시작'));
