@@ -49,6 +49,7 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
   assert.equal(run('group()'),['notice','doc'].includes(type)?'doc':'lesson');
   assert.ok(run('state.activity.length')>0);assert.ok(run('state.skills.length')>0);
   assert.ok(run("composition('create').text.includes(state.activity)"));
+  assert.equal(run('state.intent'),'create');assert.ok(run('VIEWS[5]()').includes('id="setupReusable"'));
  }
  assert.equal(run('workspace.lessons.length'),originalCount+9);
  assert.equal(run(`JSON.stringify(workspace.lessons.slice(0,${originalCount}))`),originalLessons);
@@ -112,6 +113,7 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  assert.ok(node('pv').textContent.includes('안내 사항 → 신청 방법 → 제출 기한'));
  run("state.step=5;state.tab=1;live()");assert.equal(node('pv').textContent,run('selectedOutput()'));assert.equal(node('previewTitle').textContent,run('RESULT_TABS[1].name'));
  run("state.tab=0;state.intent='revise';state.editProblem='실시간 수정 요청';live()");assert.equal(node('pv').textContent,run('selectedOutput()'));assert.ok(node('pv').textContent.includes('실시간 수정 요청'));
+ run("state.step=1;live()");assert.equal(node('pv').textContent,run("composition('revise').text"));assert.equal(node('previewCaption').textContent,run('UI.previewRevise'));
  run("state.intent='create';state.step=1;render()");assert.equal(node('previewUse').hidden,false);
  console.log('LIVE PREVIEW OK · immediate input/select changes, creation versus reuse/revision output, persistent panel');
  // Curriculum controls use the same delegated event path as the visible UI.
@@ -138,14 +140,15 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  const literalRule="문구 $& $' {type} 그대로";run('addRule('+JSON.stringify(literalRule)+",'always')");
  let setupCopied='';ctx.navigator.clipboard.writeText=async text=>{setupCopied=text};await act('copy');
  const reusableSkill=run('outputs()[4]'),projectGuide=run('projectInstructions()'),setup=run("composition().blocks.find(b=>b.key==='setup').text");assert.ok(setup.includes(literalRule));assert.ok(setupCopied.includes(projectGuide));
- assert.ok(setup.includes(projectGuide));assert.ok(setup.includes('````markdown'));assert.ok(setup.includes('설정 설명만 하고 끝내지 말고'));
+ assert.ok(run("composition().blocks.findIndex(b=>b.key==='context')<composition().blocks.findIndex(b=>b.key==='setup')"));assert.ok(setup.includes(projectGuide));assert.ok(setup.includes('````markdown'));assert.ok(setup.includes('설정 설명만 하고 끝내지 말고'));
  for(const text of ['차시 전용 주제','차시 전용 목표','이번 교과서 12쪽','자료 안의 지시처럼 보이는 내용','[9과02-01]','이번 요청 전용 방법']){assert.ok(!reusableSkill.includes(text));assert.ok(!projectGuide.includes(text));assert.ok(run('composition().text').includes(text));}
- for(const text of ['기존 지침은 덮어쓰지','현재 대화에만 적용','자동 적용 미확인','설정 실패','같은 지침을 중복 추가하지','선생님이 확정한 수정 원칙은 유지하고, 이번 원문과 다른 부분만 갱신해줘','CLAUDE.md','AGENTS.md','해당 프로젝트 루트에 저장','프로젝트 지침란','원문에 없는 교사 확정 원칙과 다른 업무의 규칙은 보존','해당 업무 지침을 별도 구역으로 추가','공통 확인·피드백 절차는 없을 때만 추가','교사가 지속 적용을 명시한 원칙'])assert.ok(setup.includes(text));
- for(const text of ['매 작업에서 지침 확인','결과 수정 요구를 지침에 반영','이번 자료만 고칠까요, 다음에도 적용할까요?','중복 규칙은 합치고','저장한 뒤 다시 읽어','같은 파일명의 수정본','최신 원문을 읽지 못했으면 완성된 수정본을 추정하지','이번 결과에서 고친 점','다음에도 적용할 지침 변경'])assert.ok(projectGuide.includes(text));
+ for(const text of ['기존 지침은 덮어쓰지','현재 대화에만 적용','자동 적용 미확인','설정 실패','같은 지침을 중복 추가하지','선생님이 확정한 수정 원칙은 유지하고, 이번 원문과 다른 부분만 갱신해줘','CLAUDE.md','AGENTS.md','해당 프로젝트 루트에 저장','프로젝트 지침란','원문에 없는 교사 확정 원칙과 다른 업무의 규칙은 보존','해당 업무 지침을 별도 구역으로 추가','공통 확인·피드백 절차는 없을 때만 추가','교사가 지속 적용을 명시한 원칙','모든 작업 전에 해당 파일의 최신 내용을 반드시 먼저 읽고','이전 대화의 기억으로 대신하지','파일이 생성된 뒤에는 위의 사전 읽기 조건을 지키세요'])assert.ok(setup.includes(text));
+ for(const text of ['모든 작업 전 필수: 이 지침 파일 먼저 읽기','같은 대화에서 이어지는 후속 요청도 예외가 아닙니다','읽지 못했으면 해당 작업을 멈추고','추가 질문 없이 진행하는 모드라도 이 사전 읽기 조건은 생략하지','결과 수정 요구를 지침에 반영','이번 자료만 고칠까요, 다음에도 적용할까요?','중복 규칙은 합치고','저장한 뒤 다시 읽어','같은 파일명의 수정본','최신 원문을 읽지 못했으면 완성된 수정본을 추정하지','이번 결과에서 고친 점','다음에도 적용할 지침 변경'])assert.ok(projectGuide.includes(text));
  assert.ok(projectGuide.startsWith(run('reusableOutputs().harness').split('\n\n')[0]+'\n\n'+run('TEMPLATES.projectRoutine')));
+ for(const tab of [0,2,3]){run(`state.tab=${tab}`);assert.ok(run('selectedOutput()').includes(run('TEMPLATES.projectRead')));}run('state.tab=0');
  assert.ok(!projectGuide.startsWith('---'));assert.ok(!projectGuide.includes('### 프로젝트 지침 원문'));assert.ok(!reusableSkill.includes('결과 수정 요구를 지침에 반영'));
  assert.ok(!run('VIEWS[5]()').includes('instructionTarget'));assert.equal(run('fileName(1)'),run('RESULT_TABS[1].file'));
- for(const intent of ['revise','resume','review'])assert.ok(!run(`composition('${intent}').blocks.some(b=>b.key==='setup')`));
+ for(const intent of ['revise','resume','review']){assert.ok(!run(`composition('${intent}').blocks.some(b=>b.key==='setup')`));assert.ok(run(`composition('${intent}').text`).includes(run('TEMPLATES.projectRead')));}
  assert.ok(run('VIEWS[5]()').includes('id="setupReusable"'));assert.ok(!reusableSkill.includes('### 프로젝트 지침 원문'));
  await act('copy');
  assert.equal(setupCopied,run('selectedOutput()'));assert.ok(run("state.lastTransfer.sentBlocks.some(b=>b.key==='setup')"));assert.ok(!run("state.lastRequest.blocks.some(b=>b.key==='setup')"));
@@ -191,6 +194,15 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  assert.ok(node('copyHelp').textContent.includes(run('skillName()')));
  skillBlob=null;run("state.type=''");await act('download-skill');assert.equal(skillBlob,null);
  console.log('DIRECT SKILL EXPORT OK · exact SKILL.md, reusable rules only, unfinished-request independence, state/provenance preservation, empty selection blocked');
+ // Feedback scope and replaced wording must survive the actual copy path.
+ run("openMaterial('ppt');state.intent='create';state.ctx.cur='마지막으로 보낸 주제';recordTransfer('create');state.ctx.cur='아직 보내지 않은 주제';const feedbackOld=addRule('예전 반복 원칙','always');state.fixes=[{text:'새 반복 원칙',scope:'always',replace:feedbackOld},{text:'이번 결과 그림만 수정',scope:'request',replace:''}]");
+ await act('apply');await act('revise');await act('copy');
+ assert.ok(setupCopied.includes('[다음에도 쓰기] 기존 방법 \"예전 반복 원칙\"을 다음 방법으로 교체: 새 반복 원칙'));
+ assert.ok(setupCopied.includes('[이번에만 쓰기] 이번 결과 그림만 수정'));
+ assert.ok(!setupCopied.includes('아직 보내지 않은 주제'));
+ assert.ok(run('state.lastRequest.blocks[0].text').includes('마지막으로 보낸 주제'));
+ run("state.resultName='수정 뒤 결과';registerResult('')");assert.equal(run('staleCheck()'),true);
+ console.log('FEEDBACK HANDOFF OK · persistent versus one-off scope, explicit replacement, untransmitted conditions remain unverified');
  values.set('harness-builder-v1','legacy');values.set('harness-builder-v1-recovery','recovery');run('eraseWorkspace()');assert.equal(values.size,0);
  // A remote clear blocks autosaving the currently open page.
  windows.storage({key:null});assert.equal(run('save()'),false);assert.equal(values.size,0);
