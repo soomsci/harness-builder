@@ -133,6 +133,19 @@ const act=async(act,rest={})=>node('card').listeners.click({target:{closest:s=>s
  const priorTransfer=run('JSON.stringify(state.lastTransfer)');
  for(const tab of [0,3]){run(`state.tab=${tab}`);await act('copy');await act('dl');assert.equal(run('JSON.stringify(state.lastTransfer)'),priorTransfer);}
  console.log('CURRICULUM EVENTS OK · search, add/remove, material switch, version change cancellation, empty search, custom subject, empty-subject transfer blocking');
+ // A direct skill export is independent of an unfinished request and never records it as sent.
+ let skillBlob;ctx.URL.createObjectURL=blob=>{skillBlob=blob;return 'blob:skill'};
+ run("state.step=5;state.tab=0;resultMode='run';state.intent='revise';state.editProblem='';addRule('항상 정답을 분리한다','always');addRule('이번에만 그림 3개','request');live()");
+ const skillView=run('VIEWS[5]()');assert.ok(skillView.includes('data-act="download-skill"'));
+ assert.ok(skillView.indexOf('data-act="download-skill"')<skillView.indexOf('id="reuse-options"'));
+ const requestState=run('JSON.stringify([state.tab,state.intent,resultMode,state.lastRequest,state.lastTransfer])');
+ assert.equal(run('transferAllowed()'),false);await act('download-skill');
+ assert.equal(node('anchor').download,'SKILL.md');assert.equal(await skillBlob.text(),run('outputs()[4]'));
+ assert.ok((await skillBlob.text()).includes('항상 정답을 분리한다'));assert.ok(!(await skillBlob.text()).includes('이번에만 그림 3개'));
+ assert.equal(run('JSON.stringify([state.tab,state.intent,resultMode,state.lastRequest,state.lastTransfer])'),requestState);
+ assert.ok(node('copyHelp').textContent.includes(run('skillName()')));
+ skillBlob=null;run("state.type=''");await act('download-skill');assert.equal(skillBlob,null);
+ console.log('DIRECT SKILL EXPORT OK · exact SKILL.md, reusable rules only, unfinished-request independence, state/provenance preservation, empty selection blocked');
  values.set('harness-builder-v1','legacy');values.set('harness-builder-v1-recovery','recovery');run('eraseWorkspace()');assert.equal(values.size,0);
  // A remote clear blocks autosaving the currently open page.
  windows.storage({key:null});assert.equal(run('save()'),false);assert.equal(values.size,0);
